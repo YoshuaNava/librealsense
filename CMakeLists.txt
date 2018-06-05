@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.1.0)
 
 project(librealsense2)
 
+find_package(catkin REQUIRED)
+
 macro(info msg)
     message(STATUS "Info: ${msg}")
 endmacro()
@@ -891,3 +893,11 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/config/realsense2.pc"     DESTINATION
 if(UNIX)
     install(CODE "execute_process(COMMAND ldconfig)")
 endif()
+
+catkin_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    realsense2
+)
+

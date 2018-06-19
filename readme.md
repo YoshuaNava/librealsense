@@ -1,3 +1,9 @@
+# NOTE: This repository has been modified to support catkin.
+
+**Changes compared to the official librealsense2 package:**
+
+- Renamed package librealsense2 to any_librealsense2 (avoid name conflicts when installing from ppa).
+
 <p align="center"><img src="doc/img/realsense.png" width="70%" /><br><br></p>
 
 -----------------

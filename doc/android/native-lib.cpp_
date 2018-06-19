@@ -3,10 +3,10 @@
 #include <string>
 #include <cstring>
 #include <thread>
-#include "librealsense/include/librealsense2/rs.hpp"
-#include "librealsense/include/librealsense2/hpp/rs_context.hpp"
-#include "librealsense/include/librealsense2/hpp/rs_pipeline.hpp"
-#include "librealsense/include/librealsense2/hpp/rs_internal.hpp"
+#include "librealsense/include/any_librealsense2/rs.hpp"
+#include "librealsense/include/any_librealsense2/hpp/rs_context.hpp"
+#include "librealsense/include/any_librealsense2/hpp/rs_pipeline.hpp"
+#include "librealsense/include/any_librealsense2/hpp/rs_internal.hpp"
 
 
 static rs2::context ctx;

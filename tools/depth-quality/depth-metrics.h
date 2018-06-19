@@ -8,8 +8,8 @@
 #include <mutex>
 #include <array>
 #include <imgui.h>
-#include <librealsense2/rsutil.h>
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rsutil.h>
+#include <any_librealsense2/rs.hpp>
 #include "rendering.h"
 
 namespace rs2

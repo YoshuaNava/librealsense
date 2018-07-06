@@ -1,6 +1,6 @@
 #include <iomanip>
 #include "depth-quality-model.h"
-#include <librealsense2/rs_advanced_mode.hpp>
+#include <any_librealsense2/rs_advanced_mode.hpp>
 #include "model-views.h"
 
 namespace rs2

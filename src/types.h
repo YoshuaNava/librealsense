@@ -9,7 +9,7 @@
 #ifndef LIBREALSENSE_TYPES_H
 #define LIBREALSENSE_TYPES_H
 
-#include "../include/librealsense2/hpp/rs_types.hpp"
+#include "../include/any_librealsense2/hpp/rs_types.hpp"
 
 #include <stdint.h>
 #include <cassert>                          // For assert

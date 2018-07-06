@@ -11,8 +11,8 @@
 #include <algorithm>
 #include <regex>
 #include <cmath>
-#include <librealsense2/rs_advanced_mode.hpp>
-#include <librealsense2/rsutil.h>
+#include <any_librealsense2/rs_advanced_mode.hpp>
+#include <any_librealsense2/rsutil.h>
 
 #include "model-views.h"
 #include <imgui_internal.h>

@@ -7,8 +7,8 @@
 
 #include <cmath>
 #include "unit-tests-common.h"
-#include "../include/librealsense2/rs_advanced_mode.hpp"
-#include <librealsense2/hpp/rs_frame.hpp>
+#include "../include/any_librealsense2/rs_advanced_mode.hpp"
+#include <any_librealsense2/hpp/rs_frame.hpp>
 #include <iostream>
 #include <chrono>
 #include <ctime>

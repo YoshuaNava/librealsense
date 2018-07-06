@@ -5,7 +5,7 @@
 <!-- via catkin_make (which invokes cmake) -->
 
 <package format="2">
-  <name>librealsense2</name>
+  <name>any_librealsense2</name>
   <!-- The version tag needs to be updated with each new release of librealsense -->
   <version>2.11.1</version>
   <description>

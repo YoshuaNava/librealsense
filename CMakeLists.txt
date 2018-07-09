@@ -732,7 +732,7 @@ if(BUILD_WITH_TM2)
 endif()
 set_target_properties(any_realsense2 PROPERTIES VERSION ${REALSENSE_VERSION_STRING}
                                 SOVERSION ${REALSENSE_VERSION_MAJOR})
-target_link_libraries(any_realsense2 PRIVATE realsense-file ${CMAKE_THREAD_LIBS_INIT} ${TRACKING_DEVICE_LIBS})
+target_link_libraries(any_realsense2 PRIVATE any-realsense-file ${CMAKE_THREAD_LIBS_INIT} ${TRACKING_DEVICE_LIBS})
 
 if (NOT USE_SYSTEM_LIBUSB)
     if(NOT WIN32)

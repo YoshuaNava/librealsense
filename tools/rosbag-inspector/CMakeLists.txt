@@ -60,7 +60,7 @@ if(BUILD_GRAPHICAL_EXAMPLES)
         ${LZ4_INCLUDE_PATH}
         )
 
-    target_link_libraries(any-rs-rosbag-inspector realsense-file ${DEPENDENCIES} ${GTK3_LIBRARIES})
+    target_link_libraries(any-rs-rosbag-inspector any-realsense-file ${DEPENDENCIES} ${GTK3_LIBRARIES})
 
     set_target_properties (any-rs-rosbag-inspector PROPERTIES
         FOLDER Tools

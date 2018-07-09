@@ -16,17 +16,17 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 endif()
 
 if(BUILD_GRAPHICAL_EXAMPLES)
-    add_executable(rs-capture rs-capture.cpp ../example.hpp)
-    target_link_libraries(rs-capture ${DEPENDENCIES})
-    include_directories(rs-capture ../ ../../third-party/tclap/include)
-    set_target_properties (rs-capture PROPERTIES
+    add_executable(any-rs-capture rs-capture.cpp ../example.hpp)
+    target_link_libraries(any-rs-capture ${DEPENDENCIES})
+    include_directories(any-rs-capture ../ ../../third-party/tclap/include)
+    set_target_properties (any-rs-capture PROPERTIES
         FOLDER "Examples"
     )
 
     install(
         TARGETS
 
-        rs-capture
+        any-rs-capture
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

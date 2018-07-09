@@ -16,9 +16,9 @@ elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-add_executable(rs-pcl rs-pcl.cpp)
-target_link_libraries(rs-pcl ${DEPENDENCIES})
-set_target_properties (rs-pcl PROPERTIES
+add_executable(any-rs-pcl rs-pcl.cpp)
+target_link_libraries(any-rs-pcl ${DEPENDENCIES})
+set_target_properties (any-rs-pcl PROPERTIES
     FOLDER "Examples/PCL"
 )
 
@@ -35,7 +35,7 @@ endforeach(flag_var)
 install(
     TARGETS
 
-    rs-pcl
+    any-rs-pcl
 
     RUNTIME DESTINATION
     ${CMAKE_INSTALL_PREFIX}/bin

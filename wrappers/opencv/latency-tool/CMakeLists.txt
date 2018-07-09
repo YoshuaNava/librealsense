@@ -16,16 +16,16 @@ elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-add_executable(rs-latency-tool rs-latency-tool.cpp latency-detector.h ../cv-helpers.hpp)
-target_link_libraries(rs-latency-tool ${DEPENDENCIES})
-set_target_properties (rs-latency-tool PROPERTIES
+add_executable(any-rs-latency-tool rs-latency-tool.cpp latency-detector.h ../cv-helpers.hpp)
+target_link_libraries(any-rs-latency-tool ${DEPENDENCIES})
+set_target_properties (any-rs-latency-tool PROPERTIES
 	FOLDER "Examples/OpenCV"
 )
 
 install(
 	TARGETS
 
-	rs-latency-tool
+	any-rs-latency-tool
 
 	RUNTIME DESTINATION
 	${CMAKE_INSTALL_PREFIX}/bin

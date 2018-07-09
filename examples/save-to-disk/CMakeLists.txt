@@ -17,17 +17,17 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 endif()
 
 # save-to-disk
-add_executable(rs-save-to-disk rs-save-to-disk.cpp)
-target_link_libraries(rs-save-to-disk ${DEPENDENCIES})
-include_directories(rs-save-to-disk ../../common ../../third-party ../../third-party/tclap/include)
-set_target_properties (rs-save-to-disk PROPERTIES
+add_executable(any-rs-save-to-disk rs-save-to-disk.cpp)
+target_link_libraries(any-rs-save-to-disk ${DEPENDENCIES})
+include_directories(any-rs-save-to-disk ../../common ../../third-party ../../third-party/tclap/include)
+set_target_properties (any-rs-save-to-disk PROPERTIES
     FOLDER "Examples"
 )
 
 install(
     TARGETS
 
-    rs-save-to-disk
+    any-rs-save-to-disk
 
     RUNTIME DESTINATION
     ${CMAKE_INSTALL_PREFIX}/bin

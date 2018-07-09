@@ -16,9 +16,9 @@ elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-add_executable(rs-dnn rs-dnn.cpp ../cv-helpers.hpp)
-target_link_libraries(rs-dnn ${DEPENDENCIES})
-set_target_properties (rs-dnn PROPERTIES
+add_executable(any-rs-dnn rs-dnn.cpp ../cv-helpers.hpp)
+target_link_libraries(any-rs-dnn ${DEPENDENCIES})
+set_target_properties (any-rs-dnn PROPERTIES
 	FOLDER "Examples/OpenCV"
 )
 
@@ -43,7 +43,7 @@ endif()
 install(
 	TARGETS
 
-	rs-dnn
+	any-rs-dnn
 
 	RUNTIME DESTINATION
 	${CMAKE_INSTALL_PREFIX}/bin

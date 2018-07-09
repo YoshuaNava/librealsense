@@ -16,16 +16,16 @@ elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-add_executable(rs-imshow rs-imshow.cpp)
-target_link_libraries(rs-imshow ${DEPENDENCIES})
-set_target_properties (rs-imshow PROPERTIES
+add_executable(any-rs-imshow rs-imshow.cpp)
+target_link_libraries(any-rs-imshow ${DEPENDENCIES})
+set_target_properties (any-rs-imshow PROPERTIES
 	FOLDER "Examples/OpenCV"
 )
 
 install(
 	TARGETS
 
-	rs-imshow
+	any-rs-imshow
 
 	RUNTIME DESTINATION
 	${CMAKE_INSTALL_PREFIX}/bin

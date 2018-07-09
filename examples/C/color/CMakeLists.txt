@@ -6,16 +6,16 @@ project(RealsenseExamples-Color)
 # Save the command line compile commands in the build output
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-add_executable(rs-color rs-color.c ../example.h)
-target_link_libraries(rs-color ${DEPENDENCIES})
-set_target_properties (rs-color PROPERTIES
+add_executable(any-rs-color rs-color.c ../example.h)
+target_link_libraries(any-rs-color ${DEPENDENCIES})
+set_target_properties (any-rs-color PROPERTIES
 FOLDER "Examples/C"
 )
 
 install(
 TARGETS
 
-rs-color
+any-rs-color
 
 RUNTIME DESTINATION
 ${CMAKE_INSTALL_PREFIX}/bin

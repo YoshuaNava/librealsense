@@ -6,16 +6,16 @@ project(RealsenseExamples-Depth)
 # Save the command line compile commands in the build output
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-add_executable(rs-depth rs-depth.c ../example.h)
-target_link_libraries(rs-depth ${DEPENDENCIES})
-set_target_properties (rs-depth PROPERTIES
+add_executable(any-rs-depth rs-depth.c ../example.h)
+target_link_libraries(any-rs-depth ${DEPENDENCIES})
+set_target_properties (any-rs-depth PROPERTIES
 FOLDER "Examples/C"
 )
 
 install(
 TARGETS
 
-rs-depth
+any-rs-depth
 
 RUNTIME DESTINATION
 ${CMAKE_INSTALL_PREFIX}/bin

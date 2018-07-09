@@ -18,7 +18,7 @@ elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-set(DEPENDENCIES realsense2)
+set(DEPENDENCIES any_realsense2)
 
 if(BUILD_PYTHON_BINDINGS)
     add_subdirectory(python)

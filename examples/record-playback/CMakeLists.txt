@@ -16,17 +16,17 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 endif()
 
 if(BUILD_GRAPHICAL_EXAMPLES)
-    add_executable(any-rs-record-playback rs-record-playback.cpp ../example.hpp ../../third-party/imgui/imgui.cpp ../../third-party/imgui/imgui_draw.cpp ../../third-party/imgui/imgui_impl_glfw.cpp)
-    target_link_libraries(any-rs-record-playback ${DEPENDENCIES})
-    include_directories(any-rs-record-playback ../ ../../third-party/tclap/include ../../third-party/imgui)
-    set_target_properties (any-rs-record-playback PROPERTIES
+    add_executable(rs-record-playback rs-record-playback.cpp ../example.hpp ../../third-party/imgui/imgui.cpp ../../third-party/imgui/imgui_draw.cpp ../../third-party/imgui/imgui_impl_glfw.cpp)
+    target_link_libraries(rs-record-playback ${DEPENDENCIES})
+    include_directories(rs-record-playback ../ ../../third-party/tclap/include ../../third-party/imgui)
+    set_target_properties (rs-record-playback PROPERTIES
         FOLDER "Examples"
     )
 
     install(
         TARGETS
 
-        any-rs-record-playback
+        rs-record-playback
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

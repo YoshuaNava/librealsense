@@ -20,7 +20,7 @@ In the following example we've used two Intel® RealSense™ Depth Cameras point
 As with any SDK application we include the Intel RealSense Cross Platform API:
 
 ```cpp
-#include <any_librealsense2/rs.hpp>     // Include RealSense Cross Platform API
+#include <librealsense2/rs.hpp>     // Include RealSense Cross Platform API
 ```
 
 In this example we will also use the auxiliary library of `example.hpp`:

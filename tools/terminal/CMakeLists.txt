@@ -17,21 +17,21 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 endif()
 
 # terminal
-add_executable(any-rs-terminal rs-terminal.cpp auto-complete.cpp auto-complete.h)
+add_executable(rs-terminal rs-terminal.cpp auto-complete.cpp auto-complete.h)
 if(WIN32 OR ANDROID)
-    target_link_libraries(any-rs-terminal ${DEPENDENCIES})
+    target_link_libraries(rs-terminal ${DEPENDENCIES})
 else()
-    target_link_libraries(any-rs-terminal -lpthread ${DEPENDENCIES})
+    target_link_libraries(rs-terminal -lpthread ${DEPENDENCIES})
 endif()
-include_directories(any-rs-terminal ../../common ../../third-party ../../third-party/tclap/include)
-set_target_properties (any-rs-terminal PROPERTIES
+include_directories(rs-terminal ../../common ../../third-party ../../third-party/tclap/include)
+set_target_properties (rs-terminal PROPERTIES
     FOLDER Tools
 )
 
 install(
     TARGETS
 
-    any-rs-terminal
+    rs-terminal
 
     RUNTIME DESTINATION
     ${CMAKE_INSTALL_PREFIX}/bin

@@ -17,7 +17,7 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 endif()
 
 # fw-logger
-add_executable(any-rs-fw-logger rs-fw-logger.cpp fw-log-data.cpp
+add_executable(rs-fw-logger rs-fw-logger.cpp fw-log-data.cpp
     fw-log-data.h
     fw-logs-formating-options.cpp
     fw-logs-formating-options.h
@@ -28,19 +28,19 @@ add_executable(any-rs-fw-logger rs-fw-logger.cpp fw-log-data.cpp
     string-formatter.cpp
     string-formatter.h)
 if(WIN32 OR ANDROID)
-    target_link_libraries(any-rs-fw-logger ${DEPENDENCIES})
+    target_link_libraries(rs-fw-logger ${DEPENDENCIES})
 else()
-    target_link_libraries(any-rs-fw-logger -lpthread ${DEPENDENCIES})
+    target_link_libraries(rs-fw-logger -lpthread ${DEPENDENCIES})
 endif()
-include_directories(any-rs-fw-logger ../../third-party/tclap/include cpp-fw-logger-helpers)
-set_target_properties (any-rs-fw-logger PROPERTIES
+include_directories(rs-fw-logger ../../third-party/tclap/include cpp-fw-logger-helpers)
+set_target_properties (rs-fw-logger PROPERTIES
     FOLDER Tools
 )
 
 install(
     TARGETS
 
-    any-rs-fw-logger
+    rs-fw-logger
 
     RUNTIME DESTINATION
     ${CMAKE_INSTALL_PREFIX}/bin

@@ -16,17 +16,17 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 endif()
 
 if(BUILD_GRAPHICAL_EXAMPLES)
-    add_executable(any-rs-software-device rs-software-device.cpp)
-    target_link_libraries(any-rs-software-device ${DEPENDENCIES})
-    include_directories(any-rs-software-device ../ ../../third-party/tclap/include ../../third-party/ ../../common/res)
-    set_target_properties (any-rs-software-device PROPERTIES
+    add_executable(rs-software-device rs-software-device.cpp)
+    target_link_libraries(rs-software-device ${DEPENDENCIES})
+    include_directories(rs-software-device ../ ../../third-party/tclap/include ../../third-party/ ../../common/res)
+    set_target_properties (rs-software-device PROPERTIES
         FOLDER "Examples"
     )
 
     install(
         TARGETS
 
-        any-rs-software-device
+        rs-software-device
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

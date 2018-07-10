@@ -18,17 +18,17 @@ endif()
 
 if(BUILD_GRAPHICAL_EXAMPLES)
     #pointcloud
-    add_executable(any-rs-pointcloud rs-pointcloud.cpp ../example.hpp)
-    target_link_libraries(any-rs-pointcloud ${DEPENDENCIES})
-    include_directories(any-rs-pointcloud ../)
-    set_target_properties (any-rs-pointcloud PROPERTIES
+    add_executable(rs-pointcloud rs-pointcloud.cpp ../example.hpp)
+    target_link_libraries(rs-pointcloud ${DEPENDENCIES})
+    include_directories(rs-pointcloud ../)
+    set_target_properties (rs-pointcloud PROPERTIES
         FOLDER Examples
     )
 
     install(
         TARGETS
 
-        any-rs-pointcloud
+        rs-pointcloud
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

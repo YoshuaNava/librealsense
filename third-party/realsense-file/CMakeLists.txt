@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.9)
-project(any-realsense-file)
+project(realsense-file)
 
 include(config.cmake)
 

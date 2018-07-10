@@ -18,10 +18,10 @@ Copyright(c) 2017 Intel Corporation. All Rights Reserved. */
 // makes std::function conversions work
 #include <pybind11/functional.h>
 
-#include "../include/any_librealsense2/rs.h"
-#include "../include/any_librealsense2/rs.hpp"
-#include "../include/any_librealsense2/rs_advanced_mode.hpp"
-#include "../include/any_librealsense2/rsutil.h"
+#include "../include/librealsense2/rs.h"
+#include "../include/librealsense2/rs.hpp"
+#include "../include/librealsense2/rs_advanced_mode.hpp"
+#include "../include/librealsense2/rsutil.h"
 #define NAME pyrealsense2
 #define SNAME "pyrealsense2"
 // hacky little bit of half-functions to make .def(BIND_DOWNCAST) look nice for binding as/is functions

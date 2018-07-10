@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <any_librealsense2/rs.hpp>
+#include <librealsense2/rs.hpp>
 
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>

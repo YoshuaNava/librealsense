@@ -17,21 +17,21 @@ elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-set(DEPENDENCIES any_realsense2)
+set(DEPENDENCIES realsense2)
 
 set (unit_tests_sources unit-tests-live.cpp unit-tests-post-processing.cpp unit-tests-post-processing.h unit-tests-main.cpp unit-tests-common.h)
 
-add_executable(any-live-test ${unit_tests_sources})
-target_link_libraries(any-live-test ${DEPENDENCIES})
+add_executable(live-test ${unit_tests_sources})
+target_link_libraries(live-test ${DEPENDENCIES})
 
-set_target_properties (any-live-test PROPERTIES
+set_target_properties (live-test PROPERTIES
     FOLDER "Unit-Tests"
 )
 
 install(
     TARGETS
 
-    any-live-test
+    live-test
 
     RUNTIME DESTINATION
     ${CMAKE_INSTALL_PREFIX}/bin

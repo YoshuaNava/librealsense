@@ -50,7 +50,7 @@ if(BUILD_GRAPHICAL_EXAMPLES)
         )
 
     if(WIN32)
-        add_executable(any-rs-depth-quality WIN32 ${RS_QUALITY_TOOL_CPP}
+        add_executable(rs-depth-quality WIN32 ${RS_QUALITY_TOOL_CPP}
                 ${CMAKE_CURRENT_SOURCE_DIR}/res/resource.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/res/realsense-viewer.rc
                 ../../common/windows-app-bootstrap.cpp)
@@ -77,28 +77,28 @@ if(BUILD_GRAPHICAL_EXAMPLES)
             ../../common/model-views.cpp
             ../../common/windows-app-bootstrap.cpp)
 
-        include_directories(any-rs-depth-quality ../../common  ../../third-party
+        include_directories(rs-depth-quality ../../common  ../../third-party
                                              ../../third-party/imgui
                                              ../../third-party/tclap/include
                                              ${CMAKE_CURRENT_SOURCE_DIR}/res/)
 
     else()
-        add_executable(any-rs-depth-quality ${RS_QUALITY_TOOL_CPP})
+        add_executable(rs-depth-quality ${RS_QUALITY_TOOL_CPP})
 
-        include_directories(any-rs-depth-quality ../../common  ../../third-party
+        include_directories(rs-depth-quality ../../common  ../../third-party
                                              ../../third-party/imgui
                                              ../../third-party/tclap/include)
     endif()
 
-    target_link_libraries(any-rs-depth-quality ${DEPENDENCIES} ${GTK3_LIBRARIES})
-    set_target_properties (any-rs-depth-quality PROPERTIES
+    target_link_libraries(rs-depth-quality ${DEPENDENCIES} ${GTK3_LIBRARIES})
+    set_target_properties (rs-depth-quality PROPERTIES
         FOLDER Tools
     )
 
     install(
         TARGETS
 
-        any-rs-depth-quality
+        rs-depth-quality
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

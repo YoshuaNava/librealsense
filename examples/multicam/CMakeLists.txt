@@ -17,17 +17,17 @@ endif()
 
 if(BUILD_GRAPHICAL_EXAMPLES)
     # multicam
-    add_executable(any-rs-multicam rs-multicam.cpp ../example.hpp)
-    include_directories(any-rs-multicam ../)
-    target_link_libraries(any-rs-multicam ${DEPENDENCIES})
-    set_target_properties (any-rs-multicam PROPERTIES
+    add_executable(rs-multicam rs-multicam.cpp ../example.hpp)
+    include_directories(rs-multicam ../)
+    target_link_libraries(rs-multicam ${DEPENDENCIES})
+    set_target_properties (rs-multicam PROPERTIES
         FOLDER Examples
     )
 
     install(
         TARGETS
 
-        any-rs-multicam
+        rs-multicam
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

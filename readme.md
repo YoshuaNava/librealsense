@@ -6,6 +6,7 @@
 - Renamed folder include/librealsense2 to include/any_librealsense2 (avoid name conflicts when installing header files)
 - Renamed library (avoid conflicts when installing official and any librealsense2)
 - Renamed executables in examples, tools, unit-tests and wrappers (avoid conflicts when installing official and any librealsense2)
+- Renamed installed package config (.pc) file (avoid conflicts when installing official and any librealsense2).
 
 <p align="center"><img src="doc/img/realsense.png" width="70%" /><br><br></p>
 

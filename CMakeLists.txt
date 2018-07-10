@@ -887,8 +887,8 @@ foreach(arg ${librealsense_PKG_LIBS})
     set(LRS_PKG_LIBS "${LRS_PKG_LIBS} ${arg}")
 endforeach()
 # Set library pkgconfig file for facilitating 3rd party integration
-configure_file(config/librealsense.pc.in config/realsense2.pc @ONLY)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/config/realsense2.pc"     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+configure_file(config/librealsense.pc.in config/any-realsense2.pc @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/config/any-realsense2.pc"     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 # Update system cache with newly installed binaries/libraries
 if(UNIX)
     install(CODE "execute_process(COMMAND ldconfig)")

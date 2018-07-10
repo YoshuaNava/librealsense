@@ -17,17 +17,17 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 endif()
 
 # enumerate-devices
-add_executable(any-rs-enumerate-devices rs-enumerate-devices.cpp)
-target_link_libraries(any-rs-enumerate-devices ${DEPENDENCIES})
-include_directories(any-rs-enumerate-devices ../../third-party/tclap/include)
-set_target_properties (any-rs-enumerate-devices PROPERTIES
+add_executable(rs-enumerate-devices rs-enumerate-devices.cpp)
+target_link_libraries(rs-enumerate-devices ${DEPENDENCIES})
+include_directories(rs-enumerate-devices ../../third-party/tclap/include)
+set_target_properties (rs-enumerate-devices PROPERTIES
     FOLDER Tools
 )
 
 install(
     TARGETS
 
-    any-rs-enumerate-devices
+    rs-enumerate-devices
 
     RUNTIME DESTINATION
     ${CMAKE_INSTALL_PREFIX}/bin

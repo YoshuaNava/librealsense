@@ -49,7 +49,7 @@ endif()
 
     # config-ui
     if(WIN32)
-        add_executable(any-realsense-viewer WIN32
+        add_executable(realsense-viewer WIN32
                 ${RS_VIEWER_CPP} ${CMAKE_CURRENT_SOURCE_DIR}/res/resource.h
                 ${RS_VIEWER_CPP} ${CMAKE_CURRENT_SOURCE_DIR}/res/realsense-viewer.rc
                 ../../common/windows-app-bootstrap.cpp)
@@ -65,23 +65,23 @@ endif()
                 ${CMAKE_CURRENT_SOURCE_DIR}/res/resource.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/res/realsense-viewer.rc)
 
-        include_directories(any-realsense-viewer ../../third-party/imgui ../../common ../../third-party ${CMAKE_CURRENT_SOURCE_DIR}/res/)
+        include_directories(realsense-viewer ../../third-party/imgui ../../common ../../third-party ${CMAKE_CURRENT_SOURCE_DIR}/res/)
     else()
-        add_executable(any-realsense-viewer
+        add_executable(realsense-viewer
                 ${RS_VIEWER_CPP})
-        include_directories(any-realsense-viewer ../../third-party/imgui ../../common ../../third-party)
+        include_directories(realsense-viewer ../../third-party/imgui ../../common ../../third-party)
     endif()
 
-    target_link_libraries(any-realsense-viewer ${DEPENDENCIES} ${GTK3_LIBRARIES})
+    target_link_libraries(realsense-viewer ${DEPENDENCIES} ${GTK3_LIBRARIES})
 
-    set_target_properties (any-realsense-viewer PROPERTIES
+    set_target_properties (realsense-viewer PROPERTIES
         FOLDER Tools
     )
 
     install(
         TARGETS
 
-        any-realsense-viewer
+        realsense-viewer
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

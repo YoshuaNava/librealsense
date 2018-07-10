@@ -46,30 +46,30 @@ if(BUILD_GRAPHICAL_EXAMPLES)
         )
 
     if(WIN32)
-        add_executable(any-rs-rosbag-inspector WIN32 ${RS_ROSBAG_INSPECTOR_CPP})
+        add_executable(rs-rosbag-inspector WIN32 ${RS_ROSBAG_INSPECTOR_CPP})
 
-        include_directories(any-rs-rosbag-inspector ../../third-party/imgui ../../common ../../third-party ${CMAKE_CURRENT_SOURCE_DIR}/res/)
+        include_directories(rs-rosbag-inspector ../../third-party/imgui ../../common ../../third-party ${CMAKE_CURRENT_SOURCE_DIR}/res/)
     else()
-        add_executable(any-rs-rosbag-inspector ${RS_ROSBAG_INSPECTOR_CPP})
-        include_directories(any-rs-rosbag-inspector ../../third-party/imgui ../../common ../../third-party)
+        add_executable(rs-rosbag-inspector ${RS_ROSBAG_INSPECTOR_CPP})
+        include_directories(rs-rosbag-inspector ../../third-party/imgui ../../common ../../third-party)
     endif()
 
-    target_include_directories(any-rs-rosbag-inspector PRIVATE
+    target_include_directories(rs-rosbag-inspector PRIVATE
         ${ROSBAG_HEADER_DIRS}
         ${BOOST_INCLUDE_PATH}
         ${LZ4_INCLUDE_PATH}
         )
 
-    target_link_libraries(any-rs-rosbag-inspector any-realsense-file ${DEPENDENCIES} ${GTK3_LIBRARIES})
+    target_link_libraries(rs-rosbag-inspector realsense-file ${DEPENDENCIES} ${GTK3_LIBRARIES})
 
-    set_target_properties (any-rs-rosbag-inspector PROPERTIES
+    set_target_properties (rs-rosbag-inspector PROPERTIES
         FOLDER Tools
     )
 
     install(
         TARGETS
 
-        any-rs-rosbag-inspector
+        rs-rosbag-inspector
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

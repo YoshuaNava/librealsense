@@ -27,7 +27,7 @@
 #include "proc/hole-filling-filter.h"
 #include "media/playback/playback_device.h"
 #include "stream.h"
-#include "../include/any_librealsense2/h/rs_types.h"
+#include "../include/librealsense2/h/rs_types.h"
 #include "pipeline.h"
 #include "environment.h"
 #include "proc/temporal-filter.h"

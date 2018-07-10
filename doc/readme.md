@@ -14,7 +14,7 @@
 ## Documentation
 
 * [API Architecture](api_arch.md) - Overview of the high-level concepts
-* [C API](../include/any_librealsense2) - With doxygen-style API comments
+* [C API](../include/librealsense2) - With doxygen-style API comments
   * To build documentation locally from sources, on Ubuntu run the following commands:
     * `sudo apt-get install doxygen`
     * `doxygen doc/doxygen/doxyfile`

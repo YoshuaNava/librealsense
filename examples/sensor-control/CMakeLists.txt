@@ -17,17 +17,17 @@ endif()
 
 if(BUILD_GRAPHICAL_EXAMPLES)
     #sensor-control
-    add_executable(any-rs-sensor-control api_how_to.h rs-sensor-control.cpp)
-    target_link_libraries(any-rs-sensor-control ${DEPENDENCIES})
-    include_directories(any-rs-sensor-control)
-    set_target_properties (any-rs-sensor-control PROPERTIES
+    add_executable(rs-sensor-control api_how_to.h rs-sensor-control.cpp)
+    target_link_libraries(rs-sensor-control ${DEPENDENCIES})
+    include_directories(rs-sensor-control)
+    set_target_properties (rs-sensor-control PROPERTIES
         FOLDER Examples
     )
 
     install(
         TARGETS
 
-        any-rs-sensor-control
+        rs-sensor-control
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

@@ -16,17 +16,17 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 endif()
 
 if(BUILD_GRAPHICAL_EXAMPLES)
-    add_executable(any-rs-measure rs-measure.cpp ../example.hpp)
-    target_link_libraries(any-rs-measure ${DEPENDENCIES})
-    include_directories(any-rs-measure ../)
-    set_target_properties (any-rs-measure PROPERTIES
+    add_executable(rs-measure rs-measure.cpp ../example.hpp)
+    target_link_libraries(rs-measure ${DEPENDENCIES})
+    include_directories(rs-measure ../)
+    set_target_properties (rs-measure PROPERTIES
         FOLDER "Examples"
     )
 
     install(
         TARGETS
 
-        any-rs-measure
+        rs-measure
 
         RUNTIME DESTINATION
         ${CMAKE_INSTALL_PREFIX}/bin

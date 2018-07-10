@@ -16,16 +16,16 @@ elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-add_executable(any-rs-grabcuts rs-grabcuts.cpp ../cv-helpers.hpp)
-target_link_libraries(any-rs-grabcuts ${DEPENDENCIES})
-set_target_properties (any-rs-grabcuts PROPERTIES
+add_executable(rs-grabcuts rs-grabcuts.cpp ../cv-helpers.hpp)
+target_link_libraries(rs-grabcuts ${DEPENDENCIES})
+set_target_properties (rs-grabcuts PROPERTIES
 	FOLDER "Examples/OpenCV"
 )
 
 install(
 	TARGETS
 
-	any-rs-grabcuts
+	rs-grabcuts
 
 	RUNTIME DESTINATION
 	${CMAKE_INSTALL_PREFIX}/bin

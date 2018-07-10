@@ -8,7 +8,7 @@
 #include <map>
 #include <utility>
 #include <vector>
-#include <any_librealsense2/rs.hpp>
+#include <librealsense2/rs.hpp>
 #include "helper.h"
 
 using namespace helper;

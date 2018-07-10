@@ -1,6 +1,6 @@
 #pragma once
 
-#include <any_librealsense2/rs.hpp>
+#include <librealsense2/rs.hpp>
 
 #include "depth-metrics.h"
 #include "model-views.h"

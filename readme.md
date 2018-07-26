@@ -1,3 +1,17 @@
+# NOTE: This is a fork from the official repository
+
+**The following changes have been done:**
+
+* Caktinized librealsense2
+
+Build with
+
+    catkin build librealsense2
+
+No additional changes to the kernel seem to be necessary (to be confirmed).
+
+-----------------
+
 <p align="center"><img src="doc/img/realsense.png" width="70%" /><br><br></p>
 
 -----------------

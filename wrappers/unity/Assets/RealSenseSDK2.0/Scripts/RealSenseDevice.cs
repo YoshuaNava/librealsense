@@ -5,11 +5,13 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using UnityEngine;
 using Intel.RealSense;
-using UnityEditor;
+using System.Collections;
+using System.Linq;
 
 /// <summary>
 /// Manages streaming using a RealSense Device
 /// </summary>
+[HelpURL("https://github.com/IntelRealSense/librealsense/tree/master/wrappers/unity")]
 public class RealSenseDevice : MonoBehaviour
 {
     /// <summary>
@@ -21,30 +23,15 @@ public class RealSenseDevice : MonoBehaviour
         UnityThread,
     }
 
-    /// <summary>
-    /// Returns the current Instance
-    /// </summary>
     public static RealSenseDevice Instance { get; private set; }
 
     /// <summary>
     /// Threading mode of operation, Multithreasds or Unitythread
     /// </summary>
-    [Tooltip("Threading mode of operation, Multithreasds or Unitythread")]
+    [Tooltip("Threading mode of operation, Multithreads or Unitythread")]
     public ProcessMode processMode;
 
-    /// <summary>
-    /// Depth Texture
-    /// </summary>
-    //public Texture2D m_depthTex;
-    /// <summary>
-    /// Infra red texture
-    /// </summary>
-    //public Texture2D m_IRTex;
-
-    /// <summary>
-    /// Called when new depth data is ready
-    /// </summary>
-    public Action DepthImageUpdated { get; set; }
+    public bool Streaming { get; private set; }
 
     /// <summary>
     /// Notifies upon streaming start
@@ -52,17 +39,32 @@ public class RealSenseDevice : MonoBehaviour
     public event Action<PipelineProfile> OnStart;
 
     /// <summary>
+    /// Notifies when streaming has stopped
+    /// </summary>
+    public event Action OnStop;
+
+    /// <summary>
+    /// Fired when a new frame is available
+    /// </summary>
+    public event Action<Frame> OnNewSample;
+
+    /// <summary>
+    /// Fired when a new time-synchronized frame set is available
+    /// </summary>
+    public event Action<FrameSet> OnNewSampleSet;
+
+    /// <summary>
     /// Provides access to the current pipeline profiles in use by the Manager
     /// </summary>
     public PipelineProfile ActiveProfile { get; private set; } //TODO: Make private and have other classes register OnStart and use that profile.
 
-    [Space]
-    [Header("Configuration")]
     /// <summary>
     /// User configuration
     /// </summary>
     public RealSenseConfiguration DeviceConfiguration = new RealSenseConfiguration
     {
+        mode = RealSenseConfiguration.Mode.Live,
+        RequestedSerialNumber = string.Empty,
         Profiles = new VideoStreamRequest[] {
             new VideoStreamRequest {Stream = Stream.Depth, StreamIndex = -1, Width = 640, Height = 480, Format = Format.Z16 , Framerate = 30 },
             new VideoStreamRequest {Stream = Stream.Infrared, StreamIndex = -1, Width = 640, Height = 480, Format = Format.Y8 , Framerate = 30 },
@@ -70,64 +72,122 @@ public class RealSenseDevice : MonoBehaviour
         }
     };
 
-    private BackgroundWorker worker;
-    private Pipeline m_pipeline;
-    private Config m_config;
-    public event Action<Frame> onNewSample;
-    public event Action<FrameSet> onNewSampleSet;
-    
-    void Awake()
-    {
-        if (Instance != null)
-            throw new Exception(string.Format("{0} singleton already instanced", this.GetType()));
-        Instance = this;
+    private Thread worker;
+    private readonly AutoResetEvent stopEvent = new AutoResetEvent(false);
 
-        m_pipeline = new Pipeline();
-        m_config = DeviceConfiguration.ToPipelineConfig();
-        ActiveProfile = m_config.Resolve(m_pipeline);
+    private Pipeline m_pipeline;
+
+    private HashSet<IVideoProcessingBlock> m_processingBlocks = new HashSet<IVideoProcessingBlock>();
+
+    public void AddProcessingBlock(IVideoProcessingBlock processingBlock)
+    {
+        m_processingBlocks.Add(processingBlock);
+    }
+    public void RemoveProcessingBlock(IVideoProcessingBlock processingBlock)
+    {
+        m_processingBlocks.Remove(processingBlock);
     }
 
-    void Start()
+    void Awake()
     {
-        try
-        {
-            ActiveProfile = m_pipeline.Start(m_config);
+        if (Instance != null && Instance != this)
+            throw new Exception(string.Format("{0} singleton already instanced", this.GetType()));
+        Instance = this;
+    }
 
-            //Start thread for multithread option
-            if (processMode == ProcessMode.Multithread)
+    void OnEnable()
+    {
+        m_pipeline = new Pipeline();
+
+        using (var cfg = DeviceConfiguration.ToPipelineConfig())
+        {
+            ActiveProfile = m_pipeline.Start(cfg);
+        }
+
+        using (var activeStreams = ActiveProfile.Streams)
+        {
+            DeviceConfiguration.Profiles = new VideoStreamRequest[activeStreams.Count];
+            for (int i = 0; i < DeviceConfiguration.Profiles.Length; i++)
             {
-                worker = new BackgroundWorker();
-                worker.DoWork += Worker_DoWork;
-                worker.WorkerSupportsCancellation = true;//Support cancel
-                worker.RunWorkerAsync();//Start the thread
+                var s = activeStreams[i];
+                var p = new VideoStreamRequest()
+                {
+                    Stream = s.Stream,
+                    Format = s.Format,
+                    Framerate = s.Framerate,
+                    StreamIndex = s.Index,
+                };
+                var vs = s as VideoStreamProfile;
+                if (vs != null)
+                {
+                    p.Width = vs.Width;
+                    p.Height = vs.Height;
+                }
+                DeviceConfiguration.Profiles[i] = p;
             }
         }
-        catch(Exception e)
+
+
+        if (processMode == ProcessMode.Multithread)
         {
-            Debug.Log("Failed to start. Error: " + e.Message);
+            stopEvent.Reset();
+            worker = new Thread(WaitForFrames);
+            worker.IsBackground = true;
+            worker.Start();
         }
 
+        StartCoroutine(WaitAndStart());
+    }
+
+    IEnumerator WaitAndStart()
+    {
+        yield return new WaitForEndOfFrame();
+        Streaming = true;
         if (OnStart != null)
             OnStart(ActiveProfile);
     }
 
+    void OnDisable()
+    {
+        OnNewSample = null;
+        OnNewSampleSet = null;
+
+        if (worker != null)
+        {
+            stopEvent.Set();
+            worker.Join();
+        }
+
+        if (Streaming && OnStop != null)
+            OnStop();
+
+        if (m_pipeline != null)
+        {
+            if (Streaming)
+                m_pipeline.Stop();
+            m_pipeline.Release();
+            m_pipeline = null;
+        }
+
+        Streaming = false;
+
+        if (ActiveProfile != null)
+        {
+            ActiveProfile.Dispose();
+            ActiveProfile = null;
+        }
+    }
+
     void OnDestroy()
     {
-        Debug.Log("RealSenseDevice OnDestory");
-        if (worker!=null)
-        {
-            //Destroy BG thread
-            worker.CancelAsync();
-        }
-        try
-        {
-            m_pipeline.Stop();
+        OnStart = null;
+        OnStop = null;
+
+        if (m_pipeline != null)
             m_pipeline.Release();
-        }
-        catch (Exception e)
-        {
-            Debug.Log(e.Message);
-        }
+        m_pipeline = null;
+
+        Instance = null;
     }
 
     /// <summary>
@@ -136,7 +196,7 @@ public class RealSenseDevice : MonoBehaviour
     /// <param name="frame">The frame instance</param>
     private void HandleFrame(Frame frame)
     {
-        var s = onNewSample;
+        var s = OnNewSample;
         if (s != null)
         {
             s(frame);
@@ -145,83 +205,131 @@ public class RealSenseDevice : MonoBehaviour
 
     private void HandleFrameSet(FrameSet frames)
     {
-        var s = onNewSampleSet;
+        var s = OnNewSampleSet;
         if (s != null)
         {
             s(frames);
-        }
-    }
-    /// <summary>
-    /// Process frame on each new frame, ends by calling the event
-    /// </summary>
-    public void ProcessFrames(FrameSet frames)
-    {
-        try
-        {
-            try
-            {
-                HandleFrameSet(frames);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.Message);
-            }
-
-            foreach (var frame in frames)
-            {
-                try
-                {
-                    HandleFrame(frame);
-                    frame.Dispose();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError(e.Message);
-                }
-            }
-            frames.Dispose();
-        }
-        catch (Exception e)
-        {
-            Debug.LogError(e.Message);
         }
     }
 
     /// <summary>
     /// Worker Thread for multithreaded operations
     /// </summary>
-    /// <param name="sender">the thread instance owner</param>
-    /// <param name="e">arguments</param>
-    private void Worker_DoWork(object sender, DoWorkEventArgs e)
+    private void WaitForFrames()
     {
-        while (worker.CancellationPending == false)
+        while (!stopEvent.WaitOne(0))
         {
-            var frames = m_pipeline.WaitForFrames();
-            ProcessFrames(frames);
+            using (var frames = m_pipeline.WaitForFrames())
+            {
+                _block.ProcessFrames(frames);
+            }
         }
-        Debug.Log("RealSenseDevice thread ended");
     }
 
     void Update()
     {
-        //Call Directly in non threaded mode
+        if (!Streaming)
+            return;
+
         if (processMode != ProcessMode.UnityThread)
             return;
 
         FrameSet frames;
-        if(m_pipeline.PollForFrames(out frames))
+        if (m_pipeline.PollForFrames(out frames))
         {
-            ProcessFrames(frames);
+            using (frames)
+                _block.ProcessFrames(frames);
         }
     }
-}
 
-//TODO:
-//[CustomEditor(typeof(RealSenseDevice))]
-//public class RealSenseDeviceEditor : Editor
-//{
-//    override public void OnInspectorGUI() { }
-//    //Allow user to select mode of operation:
-//    //   Live - Allow recording and output selection
-//    //   Playback - Allow for playback file selection
-//}
+    private Frame ApplyFilters(Frame frame)
+    {
+        var pbs = Instance.m_processingBlocks.OrderBy(i => i.Order).Where(i => i.Enabled).ToList();
+        foreach (var vpb in pbs)
+        {
+            if (!(vpb is VideoProcessingBlock))
+                continue;
+            var pb = vpb as VideoProcessingBlock;
+            if (pb.CanProcess(frame))
+            {
+                // run the processing block.
+                var processedFrame = pb.Process(frame);
+
+                // incase fork is requested, notify on new frame and use the original frame for the new frameset.
+                if (pb.Fork())
+                {
+                    Instance.HandleFrame(processedFrame);
+                    processedFrame.Dispose();
+                    continue;
+                }
+
+                // avoid disposing the frame incase the filter returns the original frame.
+                if (processedFrame == frame)
+                    continue;
+
+                // replace the current frame with the processed one to be used as the input to the next iteration (next filter)
+                frame.Dispose();
+                frame = processedFrame;
+            }
+        }
+        return frame;
+    }
+
+    private FrameSet HandleSingleFrameProcessingBlocks(FrameSet frameSet, FrameSource frameSource, FramesReleaser framesReleaser)
+    {
+        // single frame filters
+        List<Frame> processedFrames = new List<Frame>();
+        foreach (var frame in frameSet)
+        {
+            var currFrame = Instance.ApplyFilters(frame);
+
+            // cache the pocessed frame
+            processedFrames.Add(currFrame);
+            if (frame != currFrame)
+                frame.Dispose();
+        }
+
+        // Combine the frames into a single frameset
+        var newFrameSet = frameSource.AllocateCompositeFrame(framesReleaser, processedFrames.ToArray());
+
+        foreach (var f in processedFrames)
+            f.Dispose();
+
+        return newFrameSet;
+    }
+
+    private FrameSet HandleMultiFramesProcessingBlocks(FrameSet frameSet, FramesReleaser framesReleaser)
+    {
+        // multy frames filters
+        var pbs = Instance.m_processingBlocks.OrderBy(i => i.Order).Where(i => i.Enabled).ToList();
+        foreach (var vpb in pbs)
+        {
+            if (!(vpb is MultiFrameVideoProcessingBlock))
+                continue;
+            var pb = vpb as MultiFrameVideoProcessingBlock;
+            if (pb.CanProcess(frameSet))
+                frameSet = pb.Process(frameSet, framesReleaser);
+        }
+
+        return frameSet;
+    }
+
+    private CustomProcessingBlock _block = new CustomProcessingBlock((f1, src) =>
+    {
+        using (var releaser = new FramesReleaser())
+        {
+            var frames = FrameSet.FromFrame(f1, releaser);
+
+            frames = Instance.HandleSingleFrameProcessingBlocks(frames, src, releaser);
+
+            frames = Instance.HandleMultiFramesProcessingBlocks(frames, releaser);
+
+            Instance.HandleFrameSet(frames);
+            foreach (var fr in frames)
+            {
+                using (fr)
+                    Instance.HandleFrame(fr);
+            }
+        }
+    });
+}

@@ -22,7 +22,11 @@ namespace librealsense
           _metadata_parsers(std::make_shared<metadata_parser_map>()),
           _on_open(nullptr),
           _owner(dev),
-          _profiles([this]() { return this->init_stream_profiles(); })
+          _profiles([this]() {
+                auto profiles = this->init_stream_profiles();
+                _owner->tag_profiles(profiles);
+                return profiles;
+          })
     {
         register_option(RS2_OPTION_FRAMES_QUEUE_SIZE, _source.get_published_size_option());
 
@@ -254,16 +258,20 @@ namespace librealsense
         }
     }
 
-    region_of_interest_method& uvc_sensor::get_roi_method() const
+    stream_profiles sensor_base::get_stream_profiles(int tag) const
     {
-        if (!_roi_method.get())
-            throw librealsense::not_implemented_exception("Region-of-interest is not implemented for this device!");
-        return *_roi_method;
-    }
+        if (tag == profile_tag::PROFILE_TAG_ANY)
+            return *_profiles;
 
-    void uvc_sensor::set_roi_method(std::shared_ptr<region_of_interest_method> roi_method)
-    {
-        _roi_method = roi_method;
+        stream_profiles results;
+        for (auto p : *_profiles)
+        {
+            auto curr_tag = p->get_tag();
+            if (curr_tag & tag)
+                results.push_back(p);
+        }
+
+        return results;
     }
 
     stream_profiles uvc_sensor::init_stream_profiles()
@@ -338,8 +346,10 @@ namespace librealsense
             auto a = to_profile(ap.get());
             auto b = to_profile(bp.get());
 
-            auto at = std::make_tuple(a.stream, a.width, a.height, a.fps, a.format);
-            auto bt = std::make_tuple(b.stream, b.width, b.height, b.fps, b.format);
+            // stream == RS2_STREAM_COLOR && format == RS2_FORMAT_RGB8 element works around the fact that Y16 gets priority over RGB8 when both
+            // are available for pipeline stream resolution
+            auto at = std::make_tuple(a.stream, a.width, a.height, a.fps, a.stream == RS2_STREAM_COLOR && a.format == RS2_FORMAT_RGB8, a.format);
+            auto bt = std::make_tuple(b.stream, b.width, b.height, b.fps, b.stream == RS2_STREAM_COLOR && b.format == RS2_FORMAT_RGB8, b.format);
 
             return at > bt;
         });
@@ -389,6 +399,7 @@ namespace librealsense
             throw wrong_api_call_sequence_exception("open(...) failed. UVC device is already opened!");
 
         auto on = std::unique_ptr<power>(new power(std::dynamic_pointer_cast<uvc_sensor>(shared_from_this())));
+
         _source.init(_metadata_parsers);
         _source.set_sensor(this->shared_from_this());
         auto mapping = resolve_requests(requests);
@@ -547,6 +558,7 @@ namespace librealsense
                 catch (...) {}
             }
             reset_streaming();
+            _power.reset();
             _is_opened = false;
             throw;
         }
@@ -867,6 +879,7 @@ namespace librealsense
             throw wrong_api_call_sequence_exception("start_streaming(...) failed. Hid device was not opened!");
 
         _source.set_callback(callback);
+
         _source.init(_metadata_parsers);
         _source.set_sensor(this->shared_from_this());
         raise_on_before_streaming_changes(true); //Required to be just before actual start allow recording to work
@@ -971,7 +984,6 @@ namespace librealsense
     {
         return _hid_device->get_custom_report_data(custom_sensor_name, report_name, report_field);
     }
-
 
     stream_profiles hid_sensor::init_stream_profiles()
     {

@@ -204,7 +204,7 @@ namespace rs2
         * This method is required if the application needs to set device or sensor settings prior to pipeline streaming,
         * to enforce the pipeline to use the configured device.
         *
-        * \param[in] Serial device serial number, as returned by RS2_CAMERA_INFO_SERIAL_NUMBER
+        * \param[in] serial device serial number, as returned by RS2_CAMERA_INFO_SERIAL_NUMBER
         */
         void enable_device(const std::string& serial)
         {
@@ -467,6 +467,20 @@ namespace rs2
             auto res = rs2_pipeline_poll_for_frames(_pipeline.get(), &frame_ref, &e);
             error::handle(e);
 
+            if (res) *f = frameset(frame(frame_ref));
+            return res > 0;
+        }
+
+        bool try_wait_for_frames(frameset* f, unsigned int timeout_ms = 5000) const
+        {
+            if (!f)
+            {
+                throw std::invalid_argument("null frameset");
+            }
+            rs2_error* e = nullptr;
+            rs2_frame* frame_ref = nullptr;
+            auto res = rs2_pipeline_try_wait_for_frames(_pipeline.get(), &frame_ref, timeout_ms, &e);
+            error::handle(e);
             if (res) *f = frameset(frame(frame_ref));
             return res > 0;
         }

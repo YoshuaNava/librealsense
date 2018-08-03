@@ -10,6 +10,9 @@ namespace Intel.RealSense
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void frame_processor_callback(IntPtr frame, IntPtr user, IntPtr user_data);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void rs2_devices_changed_callback(IntPtr removed, IntPtr added, IntPtr user_data);
+
     public enum NotificationCategory
     {
         FramesTimeout = 0,
@@ -128,17 +131,35 @@ namespace Intel.RealSense
 
     public enum FrameMetadataValue
     {
-        Rs2FrameMetadataFrameCounter = 0,
-        Rs2FrameMetadataFrameTimestamp = 1,
-        Rs2FrameMetadataSensorTimestamp = 2,
-        Rs2FrameMetadataActualExposure = 3,
-        Rs2FrameMetadataGainLevel = 4,
-        Rs2FrameMetadataAutoExposure = 5,
-        Rs2FrameMetadataWhiteBalance = 6,
-        Rs2FrameMetadataTimeOfArrival = 7,
-        Rs2FrameMetadataBackendTimestamp= 8,
-        Rs2FrameMetadataActualFps = 9,
-        Rs2FrameMetadataCount = 10,
+        FrameCounter = 0,
+        FrameTimestamp = 1,
+        SensorTimestamp = 2,
+        ActualExposure = 3,
+        GainLevel = 4,
+        AutoExposure = 5,
+        WhiteBalance = 6,
+        TimeOfArrival = 7,
+        Temperature = 8,
+        BackendTimestamp = 9,
+        ActualFps = 10,
+        FrameLaserPower = 11,
+        FrameLaserPowerMode = 12,
+        ExposurePriority = 13,
+        ExposureRoiLeft = 14,
+        ExposureRoiRight = 15,
+        ExposureRoiTop = 16,
+        ExposureRoiBottom = 17,
+        Brightness = 18,
+        Contrast = 19,
+        Saturation = 20,
+        Sharpness = 21,
+        AutoWhiteBalanceTemperature = 22,
+        BacklightCompensation = 23,
+        Hue = 24,
+        Gamma = 25,
+        ManualWhiteBalance = 26,
+        PowerLineFrequency = 27,
+        LowLightCompensation = 28,
     }
 
     public enum Option
@@ -185,6 +206,7 @@ namespace Intel.RealSense
         HolesFill = 39,
         StereoBaseline = 40,
         AutoExposureConvergeStep = 41,
+        InterCamSyncMode = 42,
     }
 
     public enum Sr300VisualPreset
@@ -274,4 +296,40 @@ namespace Intel.RealSense
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
         public float[] translation; // Three-element translation vector, in meters
     }
+
+
+    [System.Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SoftwareVideoStream
+    {
+        public Stream type;
+        public int index;
+        public int uid;
+        public int width;
+        public int height;
+        public int fps;
+        public int bpp;
+        public Format format;
+        public Intrinsics intrinsics;
+    }
+
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void Deleter();
+
+    [System.Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public class SoftwareVideoFrame
+    {
+        public IntPtr pixels;
+        public Deleter deleter = delegate { };
+        public int stride;
+        public int bpp;
+        public double timestamp;
+        public TimestampDomain domain;
+        public int frame_number;
+        public IntPtr profile;
+    }
+
+
 }

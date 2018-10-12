@@ -788,7 +788,7 @@ add_definitions(-DELPP_NO_DEFAULT_LOG_FILE)
 list(APPEND librealsense_PKG_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 
-include_directories(realsense2 src)
+include_directories(src)
 
 set_target_properties (realsense2 PROPERTIES
     FOLDER Library

@@ -19,6 +19,7 @@ else()
     project(librealsense2 LANGUAGES CXX C)
 endif()
 
+find_package(catkin REQUIRED)
 
 ##################################################################
 # Parse librealsense version and assign it to CMake variables    #
@@ -1048,3 +1049,24 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/config/realsense2.pc"     DESTINATION
 if(UNIX)
     install(CODE "execute_process(COMMAND ldconfig)")
 endif()
+
+
+catkin_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    realsense2
+)
+
+install(
+  DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  PATTERN ".svn" EXCLUDE
+)
+install(
+  TARGETS realsense2
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+

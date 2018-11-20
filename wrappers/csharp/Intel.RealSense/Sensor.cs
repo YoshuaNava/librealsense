@@ -6,6 +6,16 @@ using System.Linq;
 
 namespace Intel.RealSense
 {
+    public interface IOptionsContainer : IEnumerable<IOption>
+    {
+        IOption this[Option option] { get; }
+        string OptionValueDescription(Option option, float value);
+    }
+
+    public interface IOptions {
+        IOptionsContainer Options { get;  }
+    }
+
     public class SensorList : IDisposable, IEnumerable<Sensor>
     {
         IntPtr m_instance;
@@ -91,16 +101,59 @@ namespace Intel.RealSense
         }
         #endregion
     }
+    public struct ROI
+    {
+        public int minX, minY, maxX, maxY;
+    }
 
-    public class Sensor : IDisposable
+    public class AutoExposureROI
+    {
+        internal IntPtr m_instance;
+
+        public ROI GetRegionOfInterest()
+        {
+            var result = new ROI();
+            object error;
+            NativeMethods.rs2_get_region_of_interest(m_instance, out result.minX,
+                out result.minY, out result.maxX, out result.maxY, out error);
+            return result;
+        }
+
+        public void SetRegionOfInterest(ROI value)
+        {
+            object error;
+            NativeMethods.rs2_set_region_of_interest(m_instance,
+                value.minX, value.minY, value.maxX, value.maxY, out error);
+        }
+    }
+
+    public class Sensor : IOptions, IDisposable
     {
         protected readonly IntPtr m_instance;
+        
+        public IntPtr Instance 
+        {
+            get { return m_instance; }
+        }
 
         internal Sensor(IntPtr sensor)
         {
             //if (sensor == IntPtr.Zero)
             //    throw new ArgumentNullException();
             m_instance = sensor;
+        }
+
+        public AutoExposureROI AutoExposureSettings
+        {
+            get
+            {
+                object error;
+                if (NativeMethods.rs2_is_sensor_extendable_to(m_instance, Extension.Roi, out error) > 0)
+                {
+                    return new AutoExposureROI { m_instance = m_instance };
+                }
+                return null;
+            }
         }
 
         public class CameraInfos
@@ -133,7 +186,7 @@ namespace Intel.RealSense
         }
 
 
-        public class CameraOption
+        internal class CameraOption : IOption
         {
             readonly IntPtr m_sensor;
             readonly Option option;
@@ -142,7 +195,7 @@ namespace Intel.RealSense
             private readonly float max;
             private readonly float step;
             private readonly float @default;
-            private readonly string description;
+            private string description;
 
             public CameraOption(IntPtr sensor, Option option)
             {
@@ -153,9 +206,6 @@ namespace Intel.RealSense
                 {
                     object error;
                     NativeMethods.rs2_get_option_range(m_sensor, option, out min, out max, out step, out @default, out error);
-
-                    var str = NativeMethods.rs2_get_option_description(m_sensor, option, out error);
-                    description = Marshal.PtrToStringAnsi(str);
                 }
             }
 
@@ -187,6 +237,12 @@ namespace Intel.RealSense
             {
                 get
                 {
+                    if(description == null)
+                    {
+                        object error;
+                        var str = NativeMethods.rs2_get_option_description(m_sensor, option, out error);
+                        description = Marshal.PtrToStringAnsi(str);
+                    }
                     return description;
                 }
             }
@@ -261,22 +317,23 @@ namespace Intel.RealSense
                 }
             }
         }
-
-        public class SensorOptions : IEnumerable<CameraOption>
+        
+        public class SensorOptions : IOptionsContainer
         {
             readonly IntPtr m_sensor;
-            public SensorOptions(IntPtr sensor)
+            internal SensorOptions(IntPtr sensor)
             {
                 m_sensor = sensor;
             }
 
-            public CameraOption this[Option option]
+            public IOption this[Option option]
             {
                 get
                 {
                     return new CameraOption(m_sensor, option);
                 }
             }
+
             public string OptionValueDescription(Option option, float value)
             {
                 object error;
@@ -290,7 +347,7 @@ namespace Intel.RealSense
 
             static readonly Option[] OptionValues = Enum.GetValues(typeof(Option)) as Option[];
 
-            public IEnumerator<CameraOption> GetEnumerator()
+            public IEnumerator<IOption> GetEnumerator()
             {
 
                 foreach (var v in OptionValues)
@@ -305,8 +362,9 @@ namespace Intel.RealSense
                 return GetEnumerator();
             }
         }
+
         SensorOptions m_options;
-        public SensorOptions Options
+        public IOptionsContainer Options
         {
             get
             {
@@ -453,29 +511,4 @@ namespace Intel.RealSense
         }
         #endregion
     }
-
-    public class SoftwareSensor : Sensor
-    {
-        public SoftwareSensor(IntPtr ptr) : base(ptr) {}
-
-        public StreamProfile AddVideoStream(SoftwareVideoStream video_stream)
-        {
-            object error;
-            var p = NativeMethods.rs2_software_sensor_add_video_stream(m_instance, video_stream, out error);
-            return new StreamProfile(p);
-        }
-
-        public void AddReadOnlyOption(Option option, float value)
-        {
-            object error;
-            NativeMethods.rs2_software_sensor_add_read_only_option(m_instance, option, value, out error);
-        }
-
-        public void OnVideoFrame(SoftwareVideoFrame frame)
-        {
-            object error;
-            NativeMethods.rs2_software_sensor_on_video_frame(m_instance, frame, out error);
-        }
-    }
-
 }

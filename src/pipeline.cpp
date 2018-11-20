@@ -12,7 +12,7 @@
 namespace librealsense
 {
     pipeline_processing_block::pipeline_processing_block(const std::vector<int>& streams_to_aggregate) :
-        _queue(new single_consumer_queue<frame_holder>(1)),
+        _queue(new single_consumer_frame_queue<frame_holder>(1)),
         _streams_ids(streams_to_aggregate)
     {
         auto processing_callback = [&](frame_holder frame, synthetic_source_interface* source)
@@ -212,7 +212,7 @@ namespace librealsense
         }
 
         //Look for satisfy device in case the user did not specify one.
-        auto devs = pipe->get_context()->query_devices();
+        auto devs = pipe->get_context()->query_devices(RS2_PRODUCT_LINE_ANY_INTEL);
         for (auto dev_info : devs)
         {
             try
@@ -262,7 +262,7 @@ namespace librealsense
     std::shared_ptr<device_interface> pipeline_config::get_or_add_playback_device(std::shared_ptr<pipeline> pipe, const std::string& file)
     {
         //Check if the file is already loaded to context, and if so return that device
-        for (auto&& d : pipe->get_context()->query_devices())
+        for (auto&& d : pipe->get_context()->query_devices(RS2_PRODUCT_LINE_ANY))
         {
             auto playback_devs = d->get_device_data().playback_devices;
             for (auto&& p : playback_devs)
@@ -352,7 +352,7 @@ namespace librealsense
     */
 
     pipeline::pipeline(std::shared_ptr<librealsense::context> ctx)
-        :_ctx(ctx), _hub(ctx), _dispatcher(10)
+        :_ctx(ctx), _hub(ctx, RS2_PRODUCT_LINE_ANY_INTEL), _dispatcher(10)
     {}
 
     pipeline::~pipeline()
@@ -602,6 +602,7 @@ namespace librealsense
             }
             catch (const std::exception& e)
             {
+                LOG_INFO(e.what());
                 return false;
             }
         }

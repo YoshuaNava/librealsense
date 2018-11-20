@@ -62,8 +62,8 @@ namespace rs2
             // Use Infrared luminocity as a secondary video in case synthetic chroma is not supported
             {
                 rs2::config cfg_alt;
-                cfg_alt.enable_stream(RS2_STREAM_DEPTH, 0, 0, 0, RS2_FORMAT_Z16, requested_fps);
-                cfg_alt.enable_stream(RS2_STREAM_INFRARED, 0, 0, 0, RS2_FORMAT_Y8, requested_fps);
+                cfg_alt.enable_stream(RS2_STREAM_DEPTH, -1, 0, 0, RS2_FORMAT_Z16, requested_fps);
+                cfg_alt.enable_stream(RS2_STREAM_INFRARED, -1, 0, 0, RS2_FORMAT_Y8, requested_fps);
                 cfgs.emplace_back(cfg_alt);
             }
 
@@ -434,6 +434,10 @@ namespace rs2
 
         void tool_model::render(ux_window& win)
         {
+            if (!win.is_ui_aligned())
+            {
+                _viewer_model.popup_if_ui_not_aligned(win.get_font());
+            }
             rect viewer_rect = { _viewer_model.panel_width,
                 _viewer_model.panel_y, win.width() -
                 _viewer_model.panel_width,
@@ -899,8 +903,9 @@ namespace rs2
                     {
                         auto profile = f.get_profile();
                         auto stream_type = profile.stream_type();
+                        auto stream_format = profile.format();
 
-                        if (RS2_STREAM_DEPTH == stream_type)
+                        if ((RS2_STREAM_DEPTH == stream_type) && (RS2_FORMAT_Z16 == stream_format))
                         {
                             float su = 0, baseline = -1.f;
                             rs2_intrinsics intrin{};

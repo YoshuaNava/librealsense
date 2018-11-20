@@ -17,7 +17,7 @@
 #include "source.h"
 #include "core/processing.h"
 #include "proc/synthetic-stream.h"
-#include "proc/align.h"
+#include "proc/processing-blocks-factory.h"
 #include "proc/colorizer.h"
 #include "proc/pointcloud.h"
 #include "proc/disparity-transform.h"
@@ -104,7 +104,7 @@ struct rs2_frame_queue
     {
     }
 
-    single_consumer_queue<librealsense::frame_holder> queue;
+    single_consumer_frame_queue<librealsense::frame_holder> queue;
 };
 
 struct rs2_processing_block : public rs2_options
@@ -218,14 +218,13 @@ void rs2_delete_device_hub(const rs2_device_hub* hub) BEGIN_API_CALL
 }
 NOEXCEPT_RETURN(, hub)
 
-rs2_device* rs2_device_hub_wait_for_device(rs2_context* ctx, const rs2_device_hub* hub, rs2_error** error) BEGIN_API_CALL
+rs2_device* rs2_device_hub_wait_for_device(const rs2_device_hub* hub, rs2_error** error) BEGIN_API_CALL
 {
     VALIDATE_NOT_NULL(hub);
-    VALIDATE_NOT_NULL(ctx);
     auto dev = hub->hub->wait_for_device();
-    return new rs2_device{ ctx->ctx, std::make_shared<readonly_device_info>(dev), dev };
+    return new rs2_device{ hub->hub->get_context(), std::make_shared<readonly_device_info>(dev), dev };
 }
-HANDLE_EXCEPTIONS_AND_RETURN(nullptr, hub, ctx)
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, hub)
 
 int rs2_device_hub_is_device_connected(const rs2_device_hub* hub, const rs2_device* device, rs2_error** error) BEGIN_API_CALL
 {
@@ -236,12 +235,17 @@ int rs2_device_hub_is_device_connected(const rs2_device_hub* hub, const rs2_devi
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, hub, device)
 
-rs2_device_list* rs2_query_devices(const rs2_context* context, rs2_error** error) BEGIN_API_CALL
+rs2_device_list* rs2_query_devices(const rs2_context* context, rs2_error** error)
+{
+    return rs2_query_devices_ex(context, RS2_PRODUCT_LINE_ANY_INTEL, error);
+}
+
+rs2_device_list* rs2_query_devices_ex(const rs2_context* context, int product_mask, rs2_error** error)
 {
     VALIDATE_NOT_NULL(context);
 
     std::vector<rs2_device_info> results;
-    for (auto&& dev_info : context->ctx->query_devices())
+    for (auto&& dev_info : context->ctx->query_devices(product_mask))
     {
         try
         {
@@ -256,7 +260,6 @@ rs2_device_list* rs2_query_devices(const rs2_context* context, rs2_error** error
 
     return new rs2_device_list{ context->ctx, results };
 }
-HANDLE_EXCEPTIONS_AND_RETURN(nullptr, context)
 
 rs2_sensor_list* rs2_query_sensors(const rs2_device* device, rs2_error** error) BEGIN_API_CALL
 {
@@ -1343,6 +1346,19 @@ rs2_frame* rs2_allocate_synthetic_video_frame(rs2_source* source, const rs2_stre
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, source, new_stream, original, new_bpp, new_width, new_height, new_stride, frame_type)
 
+rs2_frame* rs2_allocate_points(rs2_source* source, const rs2_stream_profile* new_stream, rs2_frame* original, rs2_error** error) BEGIN_API_CALL
+{
+    VALIDATE_NOT_NULL(source);
+    VALIDATE_NOT_NULL(original);
+    VALIDATE_NOT_NULL(new_stream);
+
+    auto recovered_profile = std::dynamic_pointer_cast<stream_profile_interface>(new_stream->profile->shared_from_this());
+
+    return (rs2_frame*)source->source->allocate_points(recovered_profile,
+        (frame_interface*)original);
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, source, new_stream, original)
+
 void rs2_synthetic_frame_ready(rs2_source* source, rs2_frame* frame, rs2_error** error) BEGIN_API_CALL
 {
     VALIDATE_NOT_NULL(frame);
@@ -1743,7 +1759,8 @@ rs2_processing_block* rs2_create_align(rs2_stream align_to, rs2_error** error) B
 {
     VALIDATE_ENUM(align_to);
 
-    auto block = std::make_shared<librealsense::align>(align_to);
+    auto block = create_align(align_to);
+
     return new rs2_processing_block{ block };
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, align_to)

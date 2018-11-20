@@ -27,7 +27,7 @@ profile = pipeline.start(config)
 # Getting the depth sensor's depth scale (see rs-align example for explanation)
 depth_sensor = profile.get_device().first_depth_sensor()
 depth_scale = depth_sensor.get_depth_scale()
-print "Depth Scale is: " , depth_scale
+print("Depth Scale is: " , depth_scale)
 
 # We will be removing the background of objects more than
 #  clipping_distance_in_meters meters away
@@ -71,7 +71,11 @@ try:
         images = np.hstack((bg_removed, depth_colormap))
         cv2.namedWindow('Align Example', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('Align Example', images)
-        cv2.waitKey(1)
+        key = cv2.waitKey(1)
+        # Press esc or 'q' to close the image window
+        if key & 0xFF == ord('q') or key == 27:
+            cv2.destroyAllWindows()
+            break
 finally:
     pipeline.stop()
 

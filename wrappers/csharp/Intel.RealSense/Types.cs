@@ -5,11 +5,13 @@ namespace Intel.RealSense
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void frame_callback(IntPtr frame, IntPtr user_data);
-    //public delegate void frame_callback([Out, MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(FrameMarshaler))] out Frame frame, IntPtr user_data);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void frame_processor_callback(IntPtr frame, IntPtr user, IntPtr user_data);
+    public delegate void frame_processor_callback(IntPtr frame, IntPtr frame_src, IntPtr user_data);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void frame_deleter(IntPtr frame);
+    
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void rs2_devices_changed_callback(IntPtr removed, IntPtr added, IntPtr user_data);
 
@@ -121,6 +123,8 @@ namespace Intel.RealSense
         MotionRaw = 15,
         MotionXyz32f = 16,
         GpioRaw = 17,
+        SixDOF = 18,
+        Disparity32 = 19,
     }
 
     public enum TimestampDomain
@@ -207,6 +211,9 @@ namespace Intel.RealSense
         StereoBaseline = 40,
         AutoExposureConvergeStep = 41,
         InterCamSyncMode = 42,
+        StreamFilter = 43,
+        StreamFormatFilter = 44,
+        StreamIndexFilter = 45
     }
 
     public enum Sr300VisualPreset
@@ -297,6 +304,35 @@ namespace Intel.RealSense
         public float[] translation; // Three-element translation vector, in meters
     }
 
+    [System.Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct VideoStream
+    {
+        public Stream type;
+        public int index;
+        public int uid;
+        public int width;
+        public int height;
+        public int fps;
+        public int bpp;
+        public Format fmt;
+        public Intrinsics intrinsics;
+    }
+
+    public enum Matchers
+    {
+        DI,      //compare depth and ir based on frame number
+        DI_C,    //compare depth and ir based on frame number,
+                 //compare the pair of corresponding depth and ir with color based on closest timestamp,
+                 //commonlly used by SR300
+        DLR_C,   //compare depth, left and right ir based on frame number,
+                 //compare the set of corresponding depth, left and right with color based on closest timestamp,
+                 //commonlly used by RS415, RS435
+        DLR,     //compare depth, left and right ir based on frame number,
+                 //commonlly used by RS400, RS405, RS410, RS420, RS430
+        Default, //the default matcher compare all the streams based on closest timestamp
+    }
+
 
     [System.Serializable]
     [StructLayout(LayoutKind.Sequential)]
@@ -313,16 +349,12 @@ namespace Intel.RealSense
         public Intrinsics intrinsics;
     }
 
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void Deleter();
-
     [System.Serializable]
     [StructLayout(LayoutKind.Sequential)]
     public class SoftwareVideoFrame
     {
         public IntPtr pixels;
-        public Deleter deleter = delegate { };
+        public frame_deleter deleter = delegate { };
         public int stride;
         public int bpp;
         public double timestamp;
@@ -330,6 +362,4 @@ namespace Intel.RealSense
         public int frame_number;
         public IntPtr profile;
     }
-
-
 }

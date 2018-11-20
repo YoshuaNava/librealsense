@@ -1,17 +1,23 @@
 # Linux Distribution
 
-**Intel® RealSense™ SDK 2.0** provides installation packages in [`dpkg`](https://en.wikipedia.org/wiki/Dpkg) format for Ubuntu 16/18 LTS.    
-\* The Realsense [DKMS](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support) kernel drivers package (`librealsense2-dkms`) supports Ubuntu LTS kernels 4.4, 4.10, 4.13 and 4.15\*.
+#### Using pre-build packages
+**Intel® RealSense™ SDK 2.0** provides installation packages in [`dpkg`](https://en.wikipedia.org/wiki/Dpkg) format for Ubuntu 16/18 [LTS](https://wiki.ubuntu.com/LTS).    
+The Realsense [DKMS](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support) kernel drivers package (`librealsense2-dkms`) supports Ubuntu LTS kernels 4.4, 4.10, 4.13 and 4.15. Please refer to [Ubuntu Kernel Release Schedule](https://wiki.ubuntu.com/Kernel/Support) for further details.
 
-**Note** Kernel 4.16 introduces some non-compatible modification to uvcvideo and media subsystem. We work to support it in future releases, but at this time the support is scoped up to kernel 4.15 and the affected users are requested to downgrade the kernel version.
+#### Configuring and building from the source code
+While we strongly recommend to use DKMS package whenever possible, there are certain cases where installing and patching the system manually is necessary:
+ - Using SDK with linux kernel **version 4.16+**
+ - Integration of user-specific patches/modules with `librealsense` SDK.
+ - Adjusting the patches for alternative kernels/distributions.
 
-
->To build the project from sources and prepare/patch the OS manually please follow steps described [here](./installation.md).
+The steps are described in [Linux manual installation guide](./installation.md)
 
 
 ## Installing the packages:
-- Register Intel's repository server's public key :  
-`sudo apt-key adv --keyserver hkp://keys.gnupg.net:80 --recv-key C8B3A55A6F3EFCDE`  
+- Register the server's public key :  
+`sudo apt-key adv --keyserver keys.gnupg.net --recv-key C8B3A55A6F3EFCDE || sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key C8B3A55A6F3EFCDE`  
+In case the public key still cannot be retrieved, check and specify proxy settings: `export http_proxy="http://<proxy>:<port>"`  
+, and rerun the command. See additional methods in the following [link](https://unix.stackexchange.com/questions/361213/unable-to-add-gpg-key-with-apt-key-behind-a-proxy).  
 
 - Add the server to the list of repositories :  
   Ubuntu 16 LTS:  

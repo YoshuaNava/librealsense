@@ -17,7 +17,7 @@
 
 namespace librealsense
 {
-    inline std::string make_less_screamy(const char* str)
+    std::string make_less_screamy(const char* str)
     {
         std::string res(str);
 
@@ -261,6 +261,9 @@ namespace librealsense
             CASE(HOLES_FILL)
             CASE(AUTO_EXPOSURE_CONVERGE_STEP)
             CASE(INTER_CAM_SYNC_MODE)
+            CASE(STREAM_FILTER)
+            CASE(STREAM_FORMAT_FILTER)
+            CASE(STREAM_INDEX_FILTER)
         default: assert(!is_valid(value)); return UNKNOWN_VALUE;
         }
 #undef CASE

@@ -8,8 +8,9 @@
 
 #ifdef RS2_USE_CUDA
 #include "cuda/cuda-conversion.cuh"
-#elif __SSSE3__
-#include <tmmintrin.h> // For SSE3 intrinsic used in unpack_yuy2_sse
+#endif
+#ifdef __SSSE3__
+#include <tmmintrin.h> // For SSSE3 intrinsics
 #endif
 
 #if defined (ANDROID) || (defined (__linux__) && !defined (__x86_64__))
@@ -97,29 +98,37 @@ namespace librealsense
 
 #pragma pack(pop)
 
-    inline void copy_hid_axes(byte * const dest[], const byte * source, double factor, int count)
+    inline void copy_hid_axes(byte * const dest[], const byte * source, double factor)
     {
         auto hid = (hid_data*)(source);
 
-        float axes[3] = { static_cast<float>((hid->x) * factor),
+        // The IMU sensor orientation shall be aligned with depth sensor's coordinate system
+        // Note that the implementation follows D435i installation pose and will require refactoring for other designs
+        // Reference spec: Bosch BMI055
+        float axes[3] = { static_cast<float>((hid->x) * -factor),
                          static_cast<float>((hid->y) * factor),
-                         static_cast<float>((hid->z) * factor) };
+                         static_cast<float>((hid->z) * -factor) };
         librealsense::copy(dest[0], axes, sizeof(axes));
     }
 
+    // The Accelerometer input format: signed int 16bit. data units 1LSB=0.001g;
+    // Librealsense output format: floating point 32bit. units m/s^2,
     template<size_t SIZE> void unpack_accel_axes(byte * const dest[], const byte * source, int width, int height)
     {
-        auto count = width * height;
-        static const float gravity = 9.80665f; // Standard Gravitation Acceleration
-        static const double accelerator_transform_factor = 0.001f*gravity;
-        copy_hid_axes(dest, source, accelerator_transform_factor, count);
+        static constexpr float gravity = 9.80665f;          // Standard Gravitation Acceleration
+        static constexpr double accelerator_transform_factor = 0.001*gravity;
+
+        copy_hid_axes(dest, source, accelerator_transform_factor);
     }
 
+    // The Gyro input format: signed int 16bit. data units 1LSB=0.1deg/sec;
+    // Librealsense output format: floating point 32bit. units rad/sec,
     template<size_t SIZE> void unpack_gyro_axes(byte * const dest[], const byte * source, int width, int height)
     {
-        auto count = width * height;
-        static const double gyro_transform_factor = 0.1* M_PI / 180.f;
-        copy_hid_axes(dest, source, gyro_transform_factor, count);
+        static constexpr double deg2rad = M_PI / 180.;
+        static const double gyro_transform_factor = 0.1 * deg2rad;
+
+        copy_hid_axes(dest, source, gyro_transform_factor);
     }
 
     void unpack_hid_raw_data(byte * const dest[], const byte * source, int width, int height)
@@ -307,21 +316,22 @@ namespace librealsense
         assert(n % 16 == 0); // All currently supported color resolutions are multiples of 16 pixels. Could easily extend support to other resolutions by copying final n<16 pixels into a zero-padded buffer and recursively calling self for final iteration.
 #ifdef RS2_USE_CUDA
         rscuda::unpack_yuy2_cuda<FORMAT>(d, s, n);
-                  
-
-#elif __SSSE3__
+#endif
+#if defined __SSSE3__ && ! defined ANDROID
         static bool do_avx = has_avx();
+        #ifdef __AVX2__
 
-        if (do_avx)
-        {
-            if (FORMAT == RS2_FORMAT_Y8) unpack_yuy2_avx_y8(d, s, n);
-            if (FORMAT == RS2_FORMAT_Y16) unpack_yuy2_avx_y16(d, s, n);
-            if (FORMAT == RS2_FORMAT_RGB8) unpack_yuy2_avx_rgb8(d, s, n);
-            if (FORMAT == RS2_FORMAT_RGBA8) unpack_yuy2_avx_rgba8(d, s, n);
-            if (FORMAT == RS2_FORMAT_BGR8) unpack_yuy2_avx_bgr8(d, s, n);
-            if (FORMAT == RS2_FORMAT_BGRA8) unpack_yuy2_avx_bgra8(d, s, n);
-        }
-        else
+                if (do_avx)
+                {
+                    if (FORMAT == RS2_FORMAT_Y8) unpack_yuy2_avx_y8(d, s, n);
+                    if (FORMAT == RS2_FORMAT_Y16) unpack_yuy2_avx_y16(d, s, n);
+                    if (FORMAT == RS2_FORMAT_RGB8) unpack_yuy2_avx_rgb8(d, s, n);
+                    if (FORMAT == RS2_FORMAT_RGBA8) unpack_yuy2_avx_rgba8(d, s, n);
+                    if (FORMAT == RS2_FORMAT_BGR8) unpack_yuy2_avx_bgr8(d, s, n);
+                    if (FORMAT == RS2_FORMAT_BGRA8) unpack_yuy2_avx_bgra8(d, s, n);
+                }
+                else
+        #endif
         {
             auto src = reinterpret_cast<const __m128i *>(s);
             auto dst = reinterpret_cast<__m128i *>(d[0]);
@@ -960,7 +970,7 @@ namespace librealsense
     // Native pixel formats //
     //////////////////////////
     const native_pixel_format pf_fe_raw8_unpatched_kernel = { 'RAW8', 1, 1, {  { false,               &copy_pixels<1>,                               { { RS2_STREAM_FISHEYE,        RS2_FORMAT_RAW8 } } } } };
-    const native_pixel_format pf_raw8                     = { 'GREY', 1, 1, {  { false,               &copy_pixels<1>,                               { { RS2_STREAM_FISHEYE,        RS2_FORMAT_RAW8 } } } } };
+    const native_pixel_format pf_raw8                     = { 'GREY', 1, 1, {  { true,                &copy_pixels<1>,                               { { RS2_STREAM_FISHEYE,        RS2_FORMAT_RAW8 } } } } };
     const native_pixel_format pf_rw16                     = { 'RW16', 1, 2, {  { false,               &copy_pixels<2>,                               { { RS2_STREAM_COLOR,          RS2_FORMAT_RAW16 } } } } };
     const native_pixel_format pf_bayer16                  = { 'BYR2', 1, 2, {  { false,               &copy_pixels<2>,                               { { RS2_STREAM_COLOR,          RS2_FORMAT_RAW16 } } } } };
     const native_pixel_format pf_rw10                     = { 'pRAA', 1, 1, {  { false,               &copy_raw10,                                   { { RS2_STREAM_COLOR,          RS2_FORMAT_RAW10 } } } } };
@@ -980,7 +990,6 @@ namespace librealsense
                                                                                { requires_processing, &copy_pixels<2>,                               { { RS2_STREAM_DEPTH,          RS2_FORMAT_Z16                    } } } } };
     const native_pixel_format pf_y8_l500                  = { 'GREY', 1, 1, {  { true,                &rotate_270_degrees_clockwise<1>,              { { RS2_STREAM_INFRARED,       RS2_FORMAT_Y8,   rotate_resolution } } },
                                                                                { requires_processing, &copy_pixels<1>,                               { { RS2_STREAM_INFRARED,       RS2_FORMAT_Y8 } } } } };
-
     const native_pixel_format pf_y8                       = { 'GREY', 1, 1, {  { requires_processing, &copy_pixels<1>,                             { { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_Y8  } } } } };
     const native_pixel_format pf_y16                      = { 'Y16 ', 1, 2, {  { true,                &unpack_y16_from_y16_10,                     { { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_Y16 } } } } };
     const native_pixel_format pf_y8i                      = { 'Y8I ', 1, 2, {  { true,                &unpack_y8_y8_from_y8i,                      { { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_Y8  },
@@ -1015,7 +1024,7 @@ namespace librealsense
 
     const native_pixel_format pf_yuyv                     = { 'YUYV', 1, 2, {  { true,                &unpack_yuy2<RS2_FORMAT_RGB8 >,                { { RS2_STREAM_COLOR,          RS2_FORMAT_RGB8 } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_Y16>,                  { { RS2_STREAM_COLOR,          RS2_FORMAT_Y16 } } },
-                                                                               { false,               &copy_pixels<2>,                               { { RS2_STREAM_COLOR,          RS2_FORMAT_YUYV } } },
+                                                                               { true,                &copy_pixels<2>,                               { { RS2_STREAM_COLOR,          RS2_FORMAT_YUYV } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_RGBA8>,                { { RS2_STREAM_COLOR,          RS2_FORMAT_RGBA8 } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_BGR8 >,                { { RS2_STREAM_COLOR,          RS2_FORMAT_BGR8 } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_BGRA8>,                { { RS2_STREAM_COLOR,          RS2_FORMAT_BGRA8 } } } } };

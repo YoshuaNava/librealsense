@@ -5,6 +5,15 @@ For building the package, run:
     catkin build librealsense2
 
 ## Patching of UVC kernel module
+Running RealSense Depth Cameras on Linux requires patching and inserting modified kernel drivers, specially when it comes to devices with the latest firmware versions (> v5.09.02).
+
+Furthermore, applying the kernel is essential to have access to the following features:
+* More accurate timestamping.
+* Enabling hardware synchronization.
+* Fetching frame metadata.
+* Improved depth frame alignment.
+* Fetching motion module data (applicable to IMU-enabled devices, such as the T265).
+
 In order to patch the Linux UVC kernel module, the steps outlined below must be followed in order:
 1. Navigate to *librealsense* root directory to run the following scripts.<br />
     Unplug any connected Intel RealSense camera.<br />  
@@ -34,9 +43,11 @@ In order to patch the Linux UVC kernel module, the steps outlined below must be 
 
 ### FAQ / Troubleshooting
 #### I get the following error message: 'Unsupported kernel version xx-xx . The patches are maintained for Ubuntu XX.XX LTS with kernel y.yy only'
-The kernel patch has only been released for a few versions of the Linux kernel for the moment. We recommend that users stick to this kernel to retain full compatibility with the UVC kernel patch.
+Currently, the kernel patch has only been released for a few versions of the Linux kernel. We recommend that users stick to one of the supported kernels to retain full compatibility with the UVC kernel patch.
 
 The official list of kernels supported can be found [here](https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#using-pre-build-packages).
+
+If you explicitly need to use an unsupported kernel version, we recommend to follow the steps outlined in the Intel wiki for experimental [LibUVC-backend installation](https://github.com/IntelRealSense/librealsense/blob/master/doc/libuvc_installation.md)
 
 #### When the script tries to mount the patched kernel module I get a message saying 'Permission denied'
 Check that you have installed the udev rules, as indicated in step 3.

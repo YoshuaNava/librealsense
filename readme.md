@@ -2,7 +2,8 @@
 
 **The following changes have been done:**
 
-* Caktinized librealsense2
+* Catkinized librealsense2
+* Added a bash script for patching the UVC module of Ubuntu low latency kernels.
 
 Build with
 

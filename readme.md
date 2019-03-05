@@ -1,15 +1,11 @@
 # NOTE: This is a fork from the official repository
 
-**The following changes have been done:**
+**The following changes have been applied on top of Intel's main development branch:**
 
-* Catkinized librealsense2
+* Catkinized librealsense2.
 * Added a bash script for patching the UVC module of Ubuntu low latency kernels.
 
-Build with
-
-    catkin build librealsense2
-
-No additional changes to the kernel seem to be necessary (to be confirmed).
+For guidelines on how to build and use this package, check [additional instructions](doc/leggedrobotics/additional_instructions.md).
 
 -----------------
 

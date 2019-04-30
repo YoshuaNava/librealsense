@@ -33,6 +33,10 @@
   <depend>libssl-dev</depend>
   <depend>dkms</depend>
   <depend>udev</depend>
+  <depend>libglfw3-dev</depend>
+  <depend>opengl</depend>
+  <depend>libglu1-mesa-dev</depend>
+  <depend>gtk3</depend>
 
   <export>
     <build_type>cmake</build_type>

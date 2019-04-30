@@ -22,6 +22,8 @@ os_set_flags()
 # macro definition located at "CMake/global_config.cmake"
 global_set_flags()
 
+find_package(catkin REQUIRED)
+
 if(BUILD_SHARED_LIBS)
     add_library(${LRS_TARGET} SHARED "")
 else()
@@ -73,3 +75,22 @@ if (BUILD_WITH_TM2)
 endif()
 
 include(CMake/install_config.cmake)
+
+catkin_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    ${LRS_TARGET}
+)
+
+install(
+  DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  PATTERN ".svn" EXCLUDE
+)
+install(
+  TARGETS ${LRS_TARGET}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

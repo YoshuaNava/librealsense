@@ -37,7 +37,7 @@ namespace librealsense
               ds5_advanced_mode_base(ds5_device::_hw_monitor, get_depth_sensor()) {}
 
         std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const override;
-        
+
         std::vector<tagged_profile> get_profiles_tags() const override
         {
             std::vector<tagged_profile> tags;
@@ -90,6 +90,19 @@ namespace librealsense
             }
             return tags;
         };
+
+        bool contradicts(const stream_profile_interface* a, const std::vector<stream_profile>& others) const override
+        {
+            if (auto vid_a = dynamic_cast<const video_stream_profile_interface*>(a))
+            {
+                for (auto request : others)
+                {
+                    if (a->get_framerate() != 0 && request.fps != 0 && (a->get_framerate() != request.fps))
+                        return true;
+                }
+            }
+            return false;
+        }
     };
 
     // ASR (D460)
@@ -165,6 +178,54 @@ namespace librealsense
             }
             return tags;
         };
+    };
+
+    class rs416_device : public ds5_rolling_shutter,
+        public ds5_active, public ds5_advanced_mode_base
+    {
+    public:
+        rs416_device(std::shared_ptr<context> ctx,
+            const platform::backend_device_group& group,
+            bool register_device_notifications)
+            : device(ctx, group, register_device_notifications),
+            ds5_device(ctx, group),
+            ds5_rolling_shutter(ctx, group),
+            ds5_active(ctx, group),
+            ds5_advanced_mode_base(ds5_device::_hw_monitor, get_depth_sensor()) {}
+
+        std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const override;
+
+        std::vector<tagged_profile> get_profiles_tags() const override
+        {
+            std::vector<tagged_profile> tags;
+            auto usb_spec = get_usb_spec();
+            if (usb_spec >= platform::usb3_type || usb_spec == platform::usb_undefined)
+            {
+                tags.push_back({ RS2_STREAM_DEPTH, -1, 720, 720, RS2_FORMAT_Z16, 30, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+                tags.push_back({ RS2_STREAM_INFRARED, 1, 1024, 1024, RS2_FORMAT_Y10BPACK, 30, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+                tags.push_back({ RS2_STREAM_INFRARED, 2, 1024, 1024, RS2_FORMAT_Y10BPACK, 30, profile_tag::PROFILE_TAG_SUPERSET });
+            }
+            else
+            {
+                tags.push_back({ RS2_STREAM_DEPTH, -1, 576, 576, RS2_FORMAT_Z16, 15, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+                tags.push_back({ RS2_STREAM_INFRARED, 1, 576, 576, RS2_FORMAT_Y10BPACK, 15, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+                tags.push_back({ RS2_STREAM_INFRARED, 2, 576, 576, RS2_FORMAT_Y10BPACK, 15, profile_tag::PROFILE_TAG_SUPERSET });
+            }
+            return tags;
+        };
+
+        bool contradicts(const stream_profile_interface* a, const std::vector<stream_profile>& others) const override
+        {
+            if (auto vid_a = dynamic_cast<const video_stream_profile_interface*>(a))
+            {
+                for (auto request : others)
+                {
+                    if (a->get_framerate() != 0 && request.fps != 0 && (a->get_framerate() != request.fps))
+                        return true;
+                }
+            }
+            return false;
+        }
     };
 
     // PWGT
@@ -276,6 +337,43 @@ namespace librealsense
         };
     };
 
+    class rs430i_device : public ds5_active, public ds5_advanced_mode_base, public ds5_motion
+    {
+    public:
+        rs430i_device(std::shared_ptr<context> ctx,
+            const platform::backend_device_group group,
+            bool register_device_notifications)
+            : device(ctx, group, register_device_notifications),
+              ds5_device(ctx, group),
+              ds5_active(ctx, group),
+              ds5_advanced_mode_base(ds5_device::_hw_monitor, get_depth_sensor()),
+              ds5_motion(ctx, group)
+        {}
+
+        std::vector<tagged_profile> get_profiles_tags() const override
+        {
+            std::vector<tagged_profile> tags;
+            auto usb_spec = get_usb_spec();
+            if (usb_spec >= platform::usb3_type || usb_spec == platform::usb_undefined)
+            {
+                tags.push_back({ RS2_STREAM_DEPTH, -1, 1280, 720, RS2_FORMAT_Z16, 30, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+                tags.push_back({ RS2_STREAM_INFRARED, 1, 1280, 720, RS2_FORMAT_Y8, 30, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+                tags.push_back({ RS2_STREAM_INFRARED, 2, 1280, 720, RS2_FORMAT_Y8, 30, profile_tag::PROFILE_TAG_SUPERSET });
+            }
+            else
+            {
+                tags.push_back({ RS2_STREAM_DEPTH, -1, 640, 480, RS2_FORMAT_Z16, 15, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+                tags.push_back({ RS2_STREAM_INFRARED, 1, 640, 480, RS2_FORMAT_Y8, 15, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+                tags.push_back({ RS2_STREAM_INFRARED, 2, 640, 480, RS2_FORMAT_Y8, 15, profile_tag::PROFILE_TAG_SUPERSET });
+            }
+            tags.push_back({ RS2_STREAM_GYRO, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 200, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+            tags.push_back({ RS2_STREAM_ACCEL, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 63, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+
+            return tags;
+        };
+        std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const override;
+    };
+
     // AWGT
     class rs430_mm_device : public ds5_active,
                             public ds5_motion,
@@ -376,7 +474,7 @@ namespace librealsense
               ds5_motion(ctx, group),
               ds5_advanced_mode_base(ds5_device::_hw_monitor, get_depth_sensor()) {}
 
-        std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const;
+        std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const override;
 
         std::vector<tagged_profile> get_profiles_tags() const override
         {
@@ -415,7 +513,7 @@ namespace librealsense
               ds5_motion(ctx, group),
               ds5_advanced_mode_base(ds5_device::_hw_monitor, get_depth_sensor()) {}
 
-        std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const;
+        std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const override;
 
         std::vector<tagged_profile> get_profiles_tags() const override
         {
@@ -430,13 +528,12 @@ namespace librealsense
             tags.push_back({ RS2_STREAM_COLOR, -1, width, height, RS2_FORMAT_RGB8, fps, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
             tags.push_back({ RS2_STREAM_DEPTH, -1, width, height, RS2_FORMAT_Z16, fps, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
             tags.push_back({ RS2_STREAM_INFRARED, -1, width, height, RS2_FORMAT_Y8, fps, profile_tag::PROFILE_TAG_SUPERSET });
-
-             // TODO - Check which IMU shall be activated by default
-            //tags.push_back({RS2_STREAM_GYRO, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 200, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
-            //tags.push_back({RS2_STREAM_ACCEL, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 125, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+            tags.push_back({RS2_STREAM_GYRO, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 200, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+            tags.push_back({RS2_STREAM_ACCEL, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 63, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
 
             return tags;
         };
+        bool compress_while_record() const override { return false; }
     };
 
 
@@ -452,13 +549,13 @@ namespace librealsense
               ds5_motion(ctx, group),
               ds5_advanced_mode_base(ds5_device::_hw_monitor, get_depth_sensor()) {}
 
-        std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const;
+        std::shared_ptr<matcher> create_matcher(const frame_holder& frame) const override;
 
         std::vector<tagged_profile> get_profiles_tags() const override
         {
             std::vector<tagged_profile> tags;
             tags.push_back({RS2_STREAM_GYRO, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 200, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
-            tags.push_back({RS2_STREAM_ACCEL, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 125, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
+            tags.push_back({RS2_STREAM_ACCEL, -1, 0, 0, RS2_FORMAT_MOTION_XYZ32F, 63, profile_tag::PROFILE_TAG_SUPERSET | profile_tag::PROFILE_TAG_DEFAULT });
 
             return tags;
         };
@@ -490,6 +587,8 @@ namespace librealsense
             return std::make_shared<rs420_mm_device>(ctx, group, register_device_notifications);
         case RS430_PID:
             return std::make_shared<rs430_device>(ctx, group, register_device_notifications);
+        case RS430I_PID:
+            return std::make_shared<rs430i_device>(ctx, group, register_device_notifications);
         case RS430_MM_PID:
             return std::make_shared<rs430_mm_device>(ctx, group, register_device_notifications);
         case RS430_MM_RGB_PID:
@@ -525,6 +624,7 @@ namespace librealsense
 
             bool all_sensors_present = mi_present(devices, 0);
 
+            // Device with multi sensors can be enabled only if all sensors (RGB + Depth) are present
             auto is_pid_of_multisensor_device = [](int pid) { return std::find(std::begin(ds::multi_sensors_pid), std::end(ds::multi_sensors_pid), pid) != std::end(ds::multi_sensors_pid); };
             bool is_device_multisensor = false;
             for (auto&& uvc : devices)
@@ -536,6 +636,22 @@ namespace librealsense
             if(is_device_multisensor)
             {
                 all_sensors_present = all_sensors_present && mi_present(devices, 3);
+            }
+
+
+            auto is_pid_of_hid_sensor_device = [](int pid) { return std::find(std::begin(ds::hid_sensors_pid), std::end(ds::hid_sensors_pid), pid) != std::end(ds::hid_sensors_pid); };
+            bool is_device_hid_sensor = false;
+            for (auto&& uvc : devices)
+            {
+                if (is_pid_of_hid_sensor_device(uvc.pid))
+                    is_device_hid_sensor = true;
+            }
+
+            // Device with hids can be enabled only if both hids (gyro and accelerometer) are present
+            // Assuming that hids amount of 2 and above guarantee that gyro and accelerometer are present
+            if (is_device_hid_sensor)
+            {
+                all_sensors_present &= (hids.capacity() >= 2);
             }
 
             if (!devices.empty() && all_sensors_present)
@@ -615,17 +731,23 @@ namespace librealsense
         return matcher_factory::create(RS2_MATCHER_DEFAULT, streams);
     }
 
+    std::shared_ptr<matcher> rs416_device::create_matcher(const frame_holder& frame) const
+    {
+        std::vector<stream_interface*> streams = { _depth_stream.get() , _left_ir_stream.get() , _right_ir_stream.get() };
+        if (frame.frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER))
+        {
+            return matcher_factory::create(RS2_MATCHER_DLR, streams);
+        }
+        return matcher_factory::create(RS2_MATCHER_DEFAULT, streams);
+    }
+
     std::shared_ptr<matcher> rs420_mm_device::create_matcher(const frame_holder& frame) const
     {
         //TODO: add matcher to mm
         std::vector<stream_interface*> streams = { _depth_stream.get() , _left_ir_stream.get() , _right_ir_stream.get()};
         std::vector<stream_interface*> mm_streams = { _fisheye_stream.get(),
         _accel_stream.get(),
-        _gyro_stream.get(),
-        _gpio_streams[0].get(),
-        _gpio_streams[1].get(),
-        _gpio_streams[2].get(),
-        _gpio_streams[3].get()};
+        _gyro_stream.get()};
 
         if (frame.frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER))
         {
@@ -662,11 +784,7 @@ namespace librealsense
         std::vector<stream_interface*> streams = { _depth_stream.get() , _left_ir_stream.get() , _right_ir_stream.get() };
         std::vector<stream_interface*> mm_streams = { _fisheye_stream.get(),
             _accel_stream.get(),
-            _gyro_stream.get(),
-            _gpio_streams[0].get(),
-            _gpio_streams[1].get(),
-            _gpio_streams[2].get(),
-            _gpio_streams[3].get()};
+            _gyro_stream.get()};
 
         if (!frame.frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER))
         {
@@ -693,15 +811,26 @@ namespace librealsense
         std::vector<stream_interface*> streams = { _depth_stream.get() , _left_ir_stream.get() , _right_ir_stream.get(), _color_stream.get() };
         std::vector<stream_interface*> mm_streams = { _fisheye_stream.get(),
             _accel_stream.get(),
-            _gyro_stream.get(),
-            _gpio_streams[0].get(),
-            _gpio_streams[1].get(),
-            _gpio_streams[2].get(),
-            _gpio_streams[3].get()};
+            _gyro_stream.get()};
 
         if (frame.frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER))
         {
             return create_composite_matcher({ matcher_factory::create(RS2_MATCHER_DLR_C, streams),
+                matcher_factory::create(RS2_MATCHER_DEFAULT, mm_streams) });
+        }
+        streams.insert(streams.end(), mm_streams.begin(), mm_streams.end());
+        return matcher_factory::create(RS2_MATCHER_DEFAULT, streams);
+    }
+
+    std::shared_ptr<matcher> rs430i_device::create_matcher(const frame_holder& frame) const
+    {
+        std::vector<stream_interface*> streams = { _depth_stream.get() , _left_ir_stream.get() , _right_ir_stream.get() };
+        // TODO - A proper matcher for High-FPS sensor is required
+        std::vector<stream_interface*> mm_streams = { _accel_stream.get(), _gyro_stream.get() };
+
+        if (frame.frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER))
+        {
+            return create_composite_matcher({ matcher_factory::create(RS2_MATCHER_DLR, streams),
                 matcher_factory::create(RS2_MATCHER_DEFAULT, mm_streams) });
         }
         streams.insert(streams.end(), mm_streams.begin(), mm_streams.end());
@@ -713,8 +842,6 @@ namespace librealsense
         std::vector<stream_interface*> streams = { _depth_stream.get() , _left_ir_stream.get() , _right_ir_stream.get(), _color_stream.get() };
         // TODO - A proper matcher for High-FPS sensor is required
         std::vector<stream_interface*> mm_streams = { _accel_stream.get(), _gyro_stream.get()};
-        for (auto i=0; i<4; i++)
-            mm_streams.emplace_back(_gpio_streams[i].get());
 
         if (frame.frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER))
         {
@@ -729,9 +856,6 @@ namespace librealsense
     {
         // TODO - A proper matcher for High-FPS sensor is required
         std::vector<stream_interface*> mm_streams = { _accel_stream.get(), _gyro_stream.get()};
-        for (auto i=0; i<4; i++)
-            mm_streams.emplace_back(_gpio_streams[i].get());
         return matcher_factory::create(RS2_MATCHER_DEFAULT, mm_streams);
     }
-
 }

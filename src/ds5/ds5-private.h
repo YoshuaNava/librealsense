@@ -18,7 +18,9 @@ namespace librealsense
         const uint16_t RS400_PID        = 0x0ad1; // PSR
         const uint16_t RS410_PID        = 0x0ad2; // ASR
         const uint16_t RS415_PID        = 0x0ad3; // ASRC
+        const uint16_t RS416_PID        = 0x0b49;
         const uint16_t RS430_PID        = 0x0ad4; // AWG
+        const uint16_t RS430I_PID       = 0x0b4b; // D430i
         const uint16_t RS430_MM_PID     = 0x0ad5; // AWGT
         const uint16_t RS_USB2_PID      = 0x0ad6; // USB2
         const uint16_t RS400_IMU_PID    = 0x0af2; // IMU
@@ -37,6 +39,7 @@ namespace librealsense
         const uint8_t DS5_DEPTH_EMITTER_ENABLED           = 2;
         const uint8_t DS5_EXPOSURE                        = 3;
         const uint8_t DS5_LASER_POWER                     = 4;
+        const uint8_t DS5_HARDWARE_PRESET                 = 6;
         const uint8_t DS5_ERROR_REPORTING                 = 7;
         const uint8_t DS5_EXT_TRIGGER                     = 8;
         const uint8_t DS5_ASIC_AND_PROJECTOR_TEMPERATURES = 9;
@@ -48,7 +51,9 @@ namespace librealsense
             ds::RS400_PID,
             ds::RS410_PID,
             ds::RS415_PID,
+            ds::RS416_PID,
             ds::RS430_PID,
+            ds::RS430I_PID,
             ds::RS430_MM_PID,
             ds::RS_USB2_PID,
             ds::RS400_IMU_PID,
@@ -70,7 +75,13 @@ namespace librealsense
             ds::RS420_MM_PID,
             ds::RS430_MM_PID,
             ds::RS430_MM_RGB_PID,
-            ds::RS435_RGB_PID
+            ds::RS435_RGB_PID,
+            ds::RS435I_PID,
+        };
+
+        static const std::set<std::uint16_t> hid_sensors_pid = {
+            ds::RS435I_PID,
+            ds::RS430I_PID
         };
 
         static const std::set<std::uint16_t> fisheye_pid = {
@@ -87,9 +98,11 @@ namespace librealsense
             { RS410_PID,        "Intel RealSense D410"},
             { RS410_MM_PID,     "Intel RealSense D410 with Tracking Module"},
             { RS415_PID,        "Intel RealSense D415"},
+            { RS416_PID,        "Intel RealSense D416"},
             { RS420_PID,        "Intel RealSense D420"},
             { RS420_MM_PID,     "Intel RealSense D420 with Tracking Module"},
             { RS430_PID,        "Intel RealSense D430"},
+            { RS430I_PID,       "Intel RealSense D430I"},
             { RS430_MM_PID,     "Intel RealSense D430 with Tracking Module"},
             { RS430_MM_RGB_PID, "Intel RealSense D430 with Tracking and RGB Modules"},
             { RS435_RGB_PID,    "Intel RealSense D435"},
@@ -130,7 +143,46 @@ namespace librealsense
             GET_CAM_SYNC    = 0x6A,     // fet Inter-cam HW sync mode
             SETRGBAEROI     = 0x75,     // set RGB auto-exposure region of interest
             GETRGBAEROI     = 0x76,     // get RGB auto-exposure region of interest
+            SET_PWM_ON_OFF  = 0x77,     // set emitter on and off mode
+            GET_PWM_ON_OFF  = 0x78,     // get emitter on and off mode
+            SETSUBPRESET    = 0x7B,     // Download sub-preset
+            GETSUBPRESET    = 0x7C,     // Upload the current sub-preset
+            GETSUBPRESETNAME= 0x7D,     // Retrieve sub-preset's name
         };
+
+        #define TOSTRING(arg) #arg
+        #define VAR_ARG_STR(x) TOSTRING(x)
+        #define ENUM2STR(x) case(x):return VAR_ARG_STR(x);
+
+        inline std::string fw_cmd2str(const fw_cmd state)
+        {
+          switch(state)
+          {
+            ENUM2STR(GLD);
+            ENUM2STR(GVD);
+            ENUM2STR(GETINTCAL);
+            ENUM2STR(OBW);
+            ENUM2STR(SET_ADV);
+            ENUM2STR(GET_ADV);
+            ENUM2STR(EN_ADV);
+            ENUM2STR(UAMG);
+            ENUM2STR(SETAEROI);
+            ENUM2STR(GETAEROI);
+            ENUM2STR(MMER);
+            ENUM2STR(GET_EXTRINSICS);
+            ENUM2STR(SET_CAM_SYNC);
+            ENUM2STR(GET_CAM_SYNC);
+            ENUM2STR(SETRGBAEROI);
+            ENUM2STR(GETRGBAEROI);
+            ENUM2STR(SET_PWM_ON_OFF);
+            ENUM2STR(GET_PWM_ON_OFF);
+            ENUM2STR(SETSUBPRESET);
+            ENUM2STR(GETSUBPRESET);
+            ENUM2STR(GETSUBPRESETNAME);
+            default:
+              return (to_string() << "Unrecognized FW command " << state);
+          }
+        }
 
         const int etDepthTableControl = 9; // Identifier of the depth table control
 
@@ -156,6 +208,8 @@ namespace librealsense
             CAP_RGB_SENSOR              = (1u << 1),    // Dedicated RGB sensor
             CAP_FISHEYE_SENSOR          = (1u << 2),    // TM1
             CAP_IMU_SENSOR              = (1u << 3),
+            CAP_GLOBAL_SHUTTER          = (1u << 4),
+            CAP_ROLLING_SHUTTER         = (1u << 5),
             CAP_MAX
         };
 
@@ -164,7 +218,9 @@ namespace librealsense
             { d400_caps::CAP_ACTIVE_PROJECTOR, "Active Projector"  },
             { d400_caps::CAP_RGB_SENSOR,       "RGB Sensor"        },
             { d400_caps::CAP_FISHEYE_SENSOR,   "Fisheye Sensor"    },
-            { d400_caps::CAP_IMU_SENSOR,       "IMU Sensor"        }
+            { d400_caps::CAP_IMU_SENSOR,       "IMU Sensor"        },
+            { d400_caps::CAP_GLOBAL_SHUTTER,   "Global Shutter"    },
+            { d400_caps::CAP_ROLLING_SHUTTER,  "Rolling Shutter"   }
         };
 
         inline d400_caps operator &(const d400_caps lhs, const d400_caps rhs)
@@ -185,7 +241,8 @@ namespace librealsense
         inline std::ostream& operator <<(std::ostream& stream, const d400_caps& cap)
         {
             for (auto i : { d400_caps::CAP_ACTIVE_PROJECTOR,d400_caps::CAP_RGB_SENSOR,
-                            d400_caps::CAP_FISHEYE_SENSOR,  d400_caps::CAP_IMU_SENSOR})
+                            d400_caps::CAP_FISHEYE_SENSOR,  d400_caps::CAP_IMU_SENSOR,
+                            d400_caps::CAP_GLOBAL_SHUTTER,  d400_caps::CAP_ROLLING_SHUTTER })
             {
                 if (i==(i&cap))
                     stream << d400_capabilities_names.at(i) << " ";
@@ -286,6 +343,15 @@ namespace librealsense
             float scale[3];
         };
 
+        // Note that the intrinsic definition follows rs2_motion_device_intrinsic with different data layout
+        struct imu_intrinsic
+        {
+            float3x3    sensitivity;
+            float3      bias;
+            float3      noise_variances;  /**< Variance of noise for X, Y, and Z axis */
+            float3      bias_variances;   /**< Variance of bias for X, Y, and Z axis */
+        };
+
         struct fisheye_calibration_table
         {
             table_header        header;
@@ -363,6 +429,57 @@ namespace librealsense
 
         constexpr size_t tm1_eeprom_size = sizeof(tm1_eeprom);
 
+        struct dm_v2_imu_intrinsic
+        {
+            float3x3            sensitivity;
+            float3              bias;
+        };
+
+        struct dm_v2_calibration_table
+        {
+            table_header            header;
+            uint8_t                 extrinsic_valid;
+            uint8_t                 intrinsic_valid;
+            uint8_t                 reserved[2];
+            extrinsics_table        depth_to_imu;       // The extrinsic parameters of IMU persented in Depth sensor's CS
+            dm_v2_imu_intrinsic     accel_intrinsic;
+            dm_v2_imu_intrinsic     gyro_intrinsic;
+            uint8_t                 reserved1[96];
+        };
+
+        constexpr size_t dm_v2_calibration_table_size = sizeof(dm_v2_calibration_table);
+
+        struct dm_v2_calib_info
+        {
+            table_header            header;
+            dm_v2_calibration_table dm_v2_calib_table;
+            tm1_serial_num_table    serial_num_table;
+        };
+
+        constexpr size_t dm_v2_calib_info_size = sizeof(dm_v2_calib_info);
+
+        // Depth Module V2 IMU EEPROM ver 0.52
+        struct dm_v2_eeprom
+        {
+            table_header            header;
+            dm_v2_calib_info        module_info;
+        };
+
+        constexpr size_t dm_v2_eeprom_size = sizeof(dm_v2_eeprom);
+
+        union eeprom_imu_table {
+            tm1_eeprom      tm1_table;
+            dm_v2_eeprom    dm_v2_table;
+        };
+
+        constexpr size_t eeprom_imu_table_size = sizeof(eeprom_imu_table);
+
+        enum imu_eeprom_id : uint16_t
+        {
+            dm_v2_eeprom_id     = 0x0101,   // The pack alignment is Big-endian
+            tm1_eeprom_id       = 0x0002
+        };
+
         struct depth_table_control
         {
             uint32_t depth_units;
@@ -393,19 +510,21 @@ namespace librealsense
         };
 
 
-        inline rs2_motion_device_intrinsic create_motion_intrinsics(imu_intrinsics data)
+        inline rs2_motion_device_intrinsic create_motion_intrinsics(imu_intrinsic data)
         {
-            rs2_motion_device_intrinsic result;
-            memset(&result, 0, sizeof(result));
+            rs2_motion_device_intrinsic result{};
+
             for (int i = 0; i < 3; i++)
             {
+                for (int j = 0; j < 3; j++)
+                    result.data[i][j] = data.sensitivity(i,j);
+
                 result.data[i][3] = data.bias[i];
-                result.data[i][i] = data.scale[i];
+                result.bias_variances[i] = data.bias_variances[i];
+                result.noise_variances[i] = data.noise_variances[i];
             }
             return result;
         }
-
-
 
 #pragma pack(pop)
 
@@ -417,6 +536,7 @@ namespace librealsense
             module_serial_offset            = 48,
             fisheye_sensor_lb               = 112,
             fisheye_sensor_hb               = 113,
+            depth_sensor_type               = 166,
             active_projector                = 170,
             rgb_sensor                      = 174,
             imu_sensor                      = 178,
@@ -528,10 +648,10 @@ namespace librealsense
             { hot_laser_power_reduce,       "Laser hot - power reduce" },
             { hot_laser_disable,            "Laser hot - disabled" },
             { flag_B_laser_disable,         "Flag B - laser disabled" },
-            { stereo_module_not_connected,  "Stered Module is not connected" },
+            { stereo_module_not_connected,  "Stereo Module is not connected" },
             { eeprom_corrupted,             "EEPROM corrupted" },
             { calibration_corrupted,        "Calibration corrupted" },
-            { mm_upd_fail,                  "Moton Module update failed" },
+            { mm_upd_fail,                  "Motion Module update failed" },
             { isp_upd_fail,                 "ISP update failed" },
             { mm_force_pause,               "Motion Module force pause" },
             { mm_failure,                   "Motion Module failure" },
@@ -553,6 +673,10 @@ namespace librealsense
         };
 
         std::vector<platform::uvc_device_info> filter_device_by_capability(const std::vector<platform::uvc_device_info>& devices, d400_caps caps);
+
+        const std::vector<uint8_t> alternating_emitter_pattern { 0x19, 0,
+            0x41, 0x6c, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x45, 0x6d, 0x69, 0x74, 0x74, 0x65, 0x72, 0,
+            0, 0x2, 0, 0x5, 0, 0x1, 0x1, 0, 0, 0, 0, 0, 0, 0, 0x5, 0, 0x1, 0x1, 0, 0, 0, 0x1, 0, 0, 0 };
 
     } // librealsense::ds
 } // namespace librealsense

@@ -12,6 +12,7 @@
 #include <cstring>
 
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <string>
 #include <sstream>
@@ -40,11 +41,7 @@
 #include <list>
 
 #pragma GCC diagnostic ignored "-Wpedantic"
-#ifdef USE_SYSTEM_LIBUSB
-    #include <libusb.h>
-#else
-    #include "libusb/libusb.h"
-#endif
+#include <libusb.h>
 #pragma GCC diagnostic pop
 
 // Metadata streaming nodes are available with kernels 4.16+
@@ -204,7 +201,7 @@ namespace librealsense
                 {
                     if (_data_buf && (!_managed))
                     {
-                        LOG_DEBUG("Enqueue buf " << _dq_buf.index << " for fd " << _file_desc);
+                        //LOG_DEBUG("Enqueue buf " << _dq_buf.index << " for fd " << _file_desc);
                         if (xioctl(_file_desc, (int)VIDIOC_QBUF, &_dq_buf) < 0)
                         {
                             LOG_ERROR("xioctl(VIDIOC_QBUF) guard failed");

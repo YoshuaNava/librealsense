@@ -9,8 +9,23 @@
 #ifndef LIBREALSENSE_TYPES_H
 #define LIBREALSENSE_TYPES_H
 
+// Disable declspec(dllexport) warnings:
+// Classes exported via LRS_EXTENSION_API are **not** part of official librealsense API (at least for now)
+// Any extension relying on these APIs must be compiled and distributed together with realsense2.dll
+#pragma warning(disable : 4275)        /* disable: C4275: non dll-interface class used as base for dll-interface class */
+#pragma warning(disable : 4251)        /* disable: C4251: class needs to have dll-interface to be used by clients of class */
+#ifdef WIN32
+#define LRS_EXTENSION_API __declspec(dllexport)
+#else
+#define LRS_EXTENSION_API
+#endif
+
 #include "../include/librealsense2/hpp/rs_types.hpp"
 
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <cmath>                            // For acos
 #include <stdint.h>
 #include <cassert>                          // For assert
 #include <cstring>                          // For memcmp
@@ -24,6 +39,9 @@
 #include <condition_variable>
 #include <functional>
 #include <utility>                          // For std::forward
+#include <limits>
+#include <iomanip>
+
 #include "backend.h"
 #include "concurrency.h"
 #if BUILD_EASYLOGGINGPP
@@ -34,9 +52,12 @@ typedef unsigned char byte;
 
 const int RS2_USER_QUEUE_SIZE = 128;
 
-#ifndef DBL_EPSILON
-const double DBL_EPSILON = 2.2204460492503131e-016;  // smallest such that 1.0+DBL_EPSILON != 1.0
-#endif
+// Usage of non-standard C++ PI derivatives is prohibitive, use local definitions
+static const double pi = std::acos(-1);
+static const double d2r = pi / 180;
+static const double r2d = 180 / pi;
+template<typename T> T deg2rad(T val) { return T(val * d2r); }
+template<typename T> T rad2deg(T val) { return T(val * r2d); }
 
 #pragma warning(disable: 4250)
 
@@ -44,11 +65,11 @@ const double DBL_EPSILON = 2.2204460492503131e-016;  // smallest such that 1.0+D
 #include "../common/android_helpers.h"
 #endif
 
+#define UNKNOWN_VALUE "UNKNOWN"
+
 namespace librealsense
 {
-    #define UNKNOWN_VALUE "UNKNOWN"
-    const double TIMESTAMP_USEC_TO_MSEC = 0.001;
-    const double TIMESTAMP_NSEC_TO_MSEC = 0.000001;
+    static const double TIMESTAMP_USEC_TO_MSEC = 0.001f;
 
     ///////////////////////////////////
     // Utility types for general use //
@@ -85,6 +106,29 @@ namespace librealsense
         return sizem * sizen;
     }
 
+    // Comparing parameter against a range of values of the same type
+    // https://stackoverflow.com/questions/15181579/c-most-efficient-way-to-compare-a-variable-to-multiple-values
+    template <typename T>
+    bool val_in_range(const T& val, const std::initializer_list<T>& list)
+    {
+        for (const auto& i : list) {
+            if (val == i) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template<class T>
+    std::string hexify(const T& val)
+    {
+        static_assert((std::is_integral<T>::value), "hexify supports integral built-in types only");
+
+        std::ostringstream oss;
+        oss << std::setw(sizeof(T)*2) << std::setfill('0') << std::uppercase << std::hex << val;
+        return oss.str().c_str();
+    }
+
     void copy(void* dst, void const* src, size_t size);
 
     std::string make_less_screamy(const char* str);
@@ -98,15 +142,34 @@ namespace librealsense
 
 #if BUILD_EASYLOGGINGPP
 
+#ifdef RS2_USE_ANDROID_BACKEND
+#include <android/log.h>
+
+#define LOG_TAG "librs"
+
+#define LOG_INFO(...)   do { std::stringstream ss; ss << __VA_ARGS__; __android_log_write(librealsense::ANDROID_LOG_INFO, LOG_TAG, ss.str().c_str()); } while(false)
+#define LOG_WARNING(...)   do { std::stringstream ss; ss << __VA_ARGS__; __android_log_write(librealsense::ANDROID_LOG_WARN, LOG_TAG, ss.str().c_str()); } while(false)
+#define LOG_ERROR(...)   do { std::stringstream ss; ss << __VA_ARGS__; __android_log_write(librealsense::ANDROID_LOG_ERROR, LOG_TAG, ss.str().c_str()); } while(false)
+#define LOG_FATAL(...)   do { std::stringstream ss; ss << __VA_ARGS__; __android_log_write(librealsense::ANDROID_LOG_ERROR, LOG_TAG, ss.str().c_str()); } while(false)
+#ifdef NDEBUG
+#define LOG_DEBUG(...)
+#else
+#define LOG_DEBUG(...)   do { std::stringstream ss; ss << __VA_ARGS__; __android_log_write(librealsense::ANDROID_LOG_DEBUG, LOG_TAG, ss.str().c_str()); } while(false)
+#endif
+
+#else //RS2_USE_ANDROID_BACKEND
+
 #define LOG_DEBUG(...)   do { CLOG(DEBUG   ,"librealsense") << __VA_ARGS__; } while(false)
 #define LOG_INFO(...)    do { CLOG(INFO    ,"librealsense") << __VA_ARGS__; } while(false)
 #define LOG_WARNING(...) do { CLOG(WARNING ,"librealsense") << __VA_ARGS__; } while(false)
 #define LOG_ERROR(...)   do { CLOG(ERROR   ,"librealsense") << __VA_ARGS__; } while(false)
 #define LOG_FATAL(...)   do { CLOG(FATAL   ,"librealsense") << __VA_ARGS__; } while(false)
 
+#endif // RS2_USE_ANDROID_BACKEND
+
 #else // BUILD_EASYLOGGINGPP
 
-#define LOG_DEBUG(...)   do { ; } while(false)
+    #define LOG_DEBUG(...)   do { ; } while(false)
 #define LOG_INFO(...)    do { ; } while(false)
 #define LOG_WARNING(...) do { ; } while(false)
 #define LOG_ERROR(...)   do { ; } while(false)
@@ -163,7 +226,7 @@ namespace librealsense
         rs2_exception_type _exception_type;
     };
 
-    class recoverable_exception : public librealsense_exception
+    class LRS_EXTENSION_API recoverable_exception : public librealsense_exception
     {
     public:
         recoverable_exception(const std::string& msg,
@@ -365,6 +428,12 @@ namespace librealsense
         return sz;
     }
 
+    template<typename T, int sz>
+    int arr_size_bytes(T(&)[sz])
+    {
+        return sz*sizeof(T);
+    }
+
     template<typename T>
     std::string array2str(T& data)
     {
@@ -420,9 +489,11 @@ namespace librealsense
 #pragma pack(pop)
     inline bool operator == (const float3 & a, const float3 & b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
     inline float3 operator + (const float3 & a, const float3 & b) { return{ a.x + b.x, a.y + b.y, a.z + b.z }; }
+    inline float3 operator - (const float3 & a, const float3 & b) { return{ a.x - b.x, a.y - b.y, a.z - b.z }; }
     inline float3 operator * (const float3 & a, float b) { return{ a.x*b, a.y*b, a.z*b }; }
     inline bool operator == (const float4 & a, const float4 & b) { return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w; }
     inline float4 operator + (const float4 & a, const float4 & b) { return{ a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w }; }
+    inline float4 operator - (const float4 & a, const float4 & b) { return{ a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w }; }
     inline bool operator == (const float3x3 & a, const float3x3 & b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
     inline float3 operator * (const float3x3 & a, const float3 & b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
     inline float3x3 operator * (const float3x3 & a, const float3x3 & b) { return{ a*b.x, a*b.y, a*b.z }; }
@@ -458,6 +529,18 @@ namespace librealsense
                 r.rotation[j * 3 + i] = (i == j) ? 1.f : 0.f;
         return r;
     }
+    inline bool operator==(const rs2_extrinsics& a, const rs2_extrinsics& b)
+    {
+        for (int i = 0; i < 3; i++) 
+            if (a.translation[i] != b.translation[i]) 
+                return false;
+        for (int j = 0; j < 3; j++)
+            for (int i = 0; i < 3; i++)
+                if (std::fabs(a.rotation[j * 3 + i] - b.rotation[j * 3 + i]) 
+                     > std::numeric_limits<float>::epsilon()) 
+                    return false;
+        return true;
+    }
     inline rs2_extrinsics inverse(const rs2_extrinsics& a) { auto p = to_pose(a); return from_pose(inverse(p)); }
 
     ///////////////////
@@ -484,7 +567,8 @@ namespace librealsense
             (a.height == b.height) &&
             (a.fps == b.fps) &&
             (a.format == b.format) &&
-            (a.index == b.index);
+            (a.index == b.index) &&
+            (a.stream == b.stream);
     }
 
     struct stream_descriptor
@@ -650,6 +734,9 @@ namespace librealsense
 
         firmware_version(int major, int minor, int patch, int build, bool is_any = false)
             : m_major(major), m_minor(minor), m_patch(patch), m_build(build), is_any(is_any), string_representation(to_string()) {}
+
+        // CTO experimental firmware versions are marked with build >= 90
+        bool experimental() const { return m_build >= 90; }
 
         static firmware_version any()
         {
@@ -1548,7 +1635,7 @@ namespace librealsense
             return std::move(_value);
         }
 
-        bool operator==(const T& other) const 
+        bool operator==(const T& other) const
         {
             return this->_value == other;
         }

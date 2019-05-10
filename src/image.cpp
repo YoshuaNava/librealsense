@@ -1,10 +1,9 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2015 Intel Corporation. All Rights Reserved.
 
-#define _USE_MATH_DEFINES
-#include <cmath>
 #include "image.h"
-#include "image_avx.h"
+#include "image-avx.h"
+#include "types.h"
 
 #ifdef RS2_USE_CUDA
 #include "cuda/cuda-conversion.cuh"
@@ -70,6 +69,7 @@ namespace librealsense
         case RS2_FORMAT_Y8: return 8;
         case RS2_FORMAT_Y16: return 16;
         case RS2_FORMAT_RAW10: return 10;
+        case RS2_FORMAT_Y10BPACK: return 16;
         case RS2_FORMAT_RAW16: return 16;
         case RS2_FORMAT_RAW8: return 8;
         case RS2_FORMAT_UYVY: return 16;
@@ -98,37 +98,33 @@ namespace librealsense
 
 #pragma pack(pop)
 
-    inline void copy_hid_axes(byte * const dest[], const byte * source, double factor)
+    template<rs2_format FORMAT> void copy_hid_axes(byte * const dest[], const byte * source, double factor)
     {
+        using namespace librealsense;
         auto hid = (hid_data*)(source);
 
-        // The IMU sensor orientation shall be aligned with depth sensor's coordinate system
-        // Note that the implementation follows D435i installation pose and will require refactoring for other designs
-        // Reference spec: Bosch BMI055
-        float axes[3] = { static_cast<float>((hid->x) * -factor),
-                         static_cast<float>((hid->y) * factor),
-                         static_cast<float>((hid->z) * -factor) };
-        librealsense::copy(dest[0], axes, sizeof(axes));
+        auto res= float3{ float(hid->x), float(hid->y), float(hid->z)} * float(factor);
+
+        librealsense::copy(dest[0], &res, sizeof(float3));
     }
 
     // The Accelerometer input format: signed int 16bit. data units 1LSB=0.001g;
     // Librealsense output format: floating point 32bit. units m/s^2,
-    template<size_t SIZE> void unpack_accel_axes(byte * const dest[], const byte * source, int width, int height)
+    template<rs2_format FORMAT> void unpack_accel_axes(byte * const dest[], const byte * source, int width, int height)
     {
         static constexpr float gravity = 9.80665f;          // Standard Gravitation Acceleration
         static constexpr double accelerator_transform_factor = 0.001*gravity;
 
-        copy_hid_axes(dest, source, accelerator_transform_factor);
+        copy_hid_axes<FORMAT>(dest, source, accelerator_transform_factor);
     }
 
     // The Gyro input format: signed int 16bit. data units 1LSB=0.1deg/sec;
     // Librealsense output format: floating point 32bit. units rad/sec,
-    template<size_t SIZE> void unpack_gyro_axes(byte * const dest[], const byte * source, int width, int height)
+    template<rs2_format FORMAT> void unpack_gyro_axes(byte * const dest[], const byte * source, int width, int height)
     {
-        static constexpr double deg2rad = M_PI / 180.;
-        static const double gyro_transform_factor = 0.1 * deg2rad;
+        static const double gyro_transform_factor = deg2rad(0.1);
 
-        copy_hid_axes(dest, source, gyro_transform_factor);
+        copy_hid_axes<FORMAT>(dest, source, gyro_transform_factor);
     }
 
     void unpack_hid_raw_data(byte * const dest[], const byte * source, int width, int height)
@@ -153,15 +149,48 @@ namespace librealsense
     }
 
     template<size_t SIZE>
-    void rotate_270_degrees_clockwise(byte * const dest[], const byte * source, int width, int height)
+    void align_l500_image_optimized(byte * const dest[], const byte * source, int width, int height)
     {
+        auto width_out = height;
+        auto height_out = width;
+
+        auto out = dest[0];
+        byte buffer[8][8 * SIZE]; // = { 0 };
+        for (int i = 0; i <= height-8; i = i + 8)
+        {
+            for (int j = 0; j <= width-8; j = j + 8)
+            {
+                for (int ii = 0; ii < 8; ++ii)
+                {
+                    for (int jj = 0; jj < 8; ++jj)
+                    {
+                        auto source_index = ((j+ jj) + (width * (i + ii))) * SIZE;
+                        memcpy((void*)(&buffer[7-jj][(7-ii) * SIZE]), &source[source_index], SIZE);
+                    }
+                }
+
+                for (int ii = 0; ii < 8; ++ii)
+                {
+                    auto out_index = (((height_out - 8 - j + 1) * width_out) - i - 8 + (ii)* width_out);
+                    memcpy(&out[(out_index)* SIZE], &(buffer[ii]), 8 * SIZE);
+                }
+            }
+        }
+    }
+
+    template<size_t SIZE>
+    void align_l500_image(byte * const dest[], const byte * source, int width, int height)
+    {
+        auto width_out = height;
+        auto height_out = width;
+
         auto out = dest[0];
         for (int i = 0; i < height; ++i)
         {
             auto row_offset = i * width;
             for (int j = 0; j < width; ++j)
             {
-                auto out_index = ((((width - 1) - j) * height) + i) * SIZE;
+                auto out_index = (((height_out - j) * width_out) - i - 1) * SIZE;
                 librealsense::copy((void*)(&out[out_index]), &(source[(row_offset + j) * SIZE]), SIZE);
             }
         }
@@ -177,7 +206,7 @@ namespace librealsense
         };
 #pragma pack(pop)
 
-        rotate_270_degrees_clockwise<1>(dest, source, width, height);
+        align_l500_image<1>(dest, source, width, height);
         auto out = dest[0];
         for (int i = (width - 1), out_i = ((width - 1) * 2); i >= 0; --i, out_i-=2)
         {
@@ -200,8 +229,24 @@ namespace librealsense
 
     void copy_raw10(byte * const dest[], const byte * source, int width, int height)
     {
-        auto count = width * height;
-        librealsense::copy(dest[0], source, (5 * (count / 4)));
+        auto count = width * height; // num of pixels
+        librealsense::copy(dest[0], source, (5.0 * (count / 4.0)));
+    }
+
+    void unpack_y10bpack(byte * const dest[], const byte * source, int width, int height)
+    {
+         auto count = width * height / 4; // num of pixels
+         uint8_t  * from = (uint8_t*)(source);
+         uint16_t * to = (uint16_t*)(dest[0]);
+
+        // Put the 10 bit into the msb of uint16_t
+         for (int i = 0; i < count; i++, from +=5) // traverse macro-pixels
+         {
+            *to++ = ((from[0] << 2) | ( from[4] & 3)) << 6;
+            *to++ = ((from[1] << 2) | ((from[4] >> 2) & 3)) << 6;
+            *to++ = ((from[2] << 2) | ((from[4] >> 4) & 3)) << 6;
+            *to++ = ((from[3] << 2) | ((from[4] >> 6) & 3)) << 6;
+         }
     }
 
     template<class SOURCE, class UNPACK> void unpack_pixels(byte * const dest[], int count, const SOURCE * source, UNPACK unpack)
@@ -316,6 +361,7 @@ namespace librealsense
         assert(n % 16 == 0); // All currently supported color resolutions are multiples of 16 pixels. Could easily extend support to other resolutions by copying final n<16 pixels into a zero-padded buffer and recursively calling self for final iteration.
 #ifdef RS2_USE_CUDA
         rscuda::unpack_yuy2_cuda<FORMAT>(d, s, n);
+        return;
 #endif
 #if defined __SSSE3__ && ! defined ANDROID
         static bool do_avx = has_avx();
@@ -610,6 +656,31 @@ namespace librealsense
             }
         }
     #endif
+    }
+
+    void unpack_yuy2_y8(byte * const d[], const byte * s, int w, int h)
+    {
+        unpack_yuy2<RS2_FORMAT_Y8>(d, s, w, h);
+    }
+    void unpack_yuy2_y16(byte * const d[], const byte * s, int w, int h)
+    {
+        unpack_yuy2<RS2_FORMAT_Y16>(d, s, w, h);
+    }
+    void unpack_yuy2_rgb8(byte * const d[], const byte * s, int w, int h)
+    {
+        unpack_yuy2<RS2_FORMAT_RGB8>(d, s, w, h);
+    }
+    void unpack_yuy2_rgba8(byte * const d[], const byte * s, int w, int h)
+    {
+        unpack_yuy2<RS2_FORMAT_RGBA8>(d, s, w, h);
+    }
+    void unpack_yuy2_bgr8(byte * const d[], const byte * s, int w, int h)
+    {
+        unpack_yuy2<RS2_FORMAT_BGR8>(d, s, w, h);
+    }
+    void unpack_yuy2_bgra8(byte * const d[], const byte * s, int w, int h)
+    {
+        unpack_yuy2<RS2_FORMAT_BGRA8>(d, s, w, h);
     }
 
     // This templated function unpacks UYVY into RGB8/RGBA8/BGR8/BGRA8, depending on the compile-time parameter FORMAT.
@@ -974,21 +1045,21 @@ namespace librealsense
     const native_pixel_format pf_rw16                     = { 'RW16', 1, 2, {  { false,               &copy_pixels<2>,                               { { RS2_STREAM_COLOR,          RS2_FORMAT_RAW16 } } } } };
     const native_pixel_format pf_bayer16                  = { 'BYR2', 1, 2, {  { false,               &copy_pixels<2>,                               { { RS2_STREAM_COLOR,          RS2_FORMAT_RAW16 } } } } };
     const native_pixel_format pf_rw10                     = { 'pRAA', 1, 1, {  { false,               &copy_raw10,                                   { { RS2_STREAM_COLOR,          RS2_FORMAT_RAW10 } } } } };
-    // W10 development format will be exposed to the user via Y8
-    const native_pixel_format pf_w10                      = { 'W10 ', 1, 1, {  { true,                &unpack_y8_from_rw10,                        { { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_Y8 } } } } };
+    const native_pixel_format pf_w10                      = { 'W10 ', 1, 2, {  { true,                &copy_raw10,                                   { { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_RAW10 } } },
+                                                                               { true,                &unpack_y10bpack,                              { { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_Y10BPACK } } } } };
 
     const native_pixel_format pf_yuy2                     = { 'YUY2', 1, 2, {  { true,                &unpack_yuy2<RS2_FORMAT_RGB8 >,                { { RS2_STREAM_COLOR,          RS2_FORMAT_RGB8 } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_Y16>,                  { { RS2_STREAM_COLOR,          RS2_FORMAT_Y16 } } },
-                                                                               { false,               &copy_pixels<2>,                               { { RS2_STREAM_COLOR,          RS2_FORMAT_YUYV } } },
+                                                                               { true,                &copy_pixels<2>,                               { { RS2_STREAM_COLOR,          RS2_FORMAT_YUYV } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_RGBA8>,                { { RS2_STREAM_COLOR,          RS2_FORMAT_RGBA8 } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_BGR8 >,                { { RS2_STREAM_COLOR,          RS2_FORMAT_BGR8 } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_BGRA8>,                { { RS2_STREAM_COLOR,          RS2_FORMAT_BGRA8 } } } } };
 
     const native_pixel_format pf_confidence_l500          = { 'C   ', 1, 1, {  { true,                &unpack_confidence,                            { { RS2_STREAM_CONFIDENCE,     RS2_FORMAT_RAW8, l500_confidence_resolution } } },
                                                                                { requires_processing, &copy_pixels<1>,                               { { RS2_STREAM_CONFIDENCE,     RS2_FORMAT_RAW8 } } } } };
-    const native_pixel_format pf_z16_l500                 = { 'Z16 ', 1, 2, {  { true,                &rotate_270_degrees_clockwise<2>,              { { RS2_STREAM_DEPTH,          RS2_FORMAT_Z16,  rotate_resolution } } },
+    const native_pixel_format pf_z16_l500                 = { 'Z16 ', 1, 2, {  { true,                &align_l500_image_optimized<2>,              { { RS2_STREAM_DEPTH,          RS2_FORMAT_Z16,  rotate_resolution } } },
                                                                                { requires_processing, &copy_pixels<2>,                               { { RS2_STREAM_DEPTH,          RS2_FORMAT_Z16                    } } } } };
-    const native_pixel_format pf_y8_l500                  = { 'GREY', 1, 1, {  { true,                &rotate_270_degrees_clockwise<1>,              { { RS2_STREAM_INFRARED,       RS2_FORMAT_Y8,   rotate_resolution } } },
+    const native_pixel_format pf_y8_l500                  = { 'GREY', 1, 1, {  { true,                &align_l500_image_optimized<1>,              { { RS2_STREAM_INFRARED,       RS2_FORMAT_Y8,   rotate_resolution } } },
                                                                                { requires_processing, &copy_pixels<1>,                               { { RS2_STREAM_INFRARED,       RS2_FORMAT_Y8 } } } } };
     const native_pixel_format pf_y8                       = { 'GREY', 1, 1, {  { requires_processing, &copy_pixels<1>,                             { { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_Y8  } } } } };
     const native_pixel_format pf_y16                      = { 'Y16 ', 1, 2, {  { true,                &unpack_y16_from_y16_10,                     { { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_Y16 } } } } };
@@ -1014,7 +1085,7 @@ namespace librealsense
                                                                                                                                                      { { RS2_STREAM_INFRARED, 1 },  RS2_FORMAT_Y16 } } } } };
 
     const native_pixel_format pf_uyvyl                    = { 'UYVY', 1, 2, {  { true,                &unpack_uyvy<RS2_FORMAT_RGB8 >,                { { RS2_STREAM_INFRARED,       RS2_FORMAT_RGB8 } } },
-                                                                               { false,               &copy_pixels<2>,                               { { RS2_STREAM_INFRARED,       RS2_FORMAT_UYVY } } },
+                                                                               { true,                &copy_pixels<2>,                               { { RS2_STREAM_INFRARED,       RS2_FORMAT_UYVY } } },
                                                                                { true,                &unpack_uyvy<RS2_FORMAT_RGBA8>,                { { RS2_STREAM_INFRARED,       RS2_FORMAT_RGBA8} } },
                                                                                { true,                &unpack_uyvy<RS2_FORMAT_BGR8 >,                { { RS2_STREAM_INFRARED,       RS2_FORMAT_BGR8 } } },
                                                                                { true,                &unpack_uyvy<RS2_FORMAT_BGRA8>,                { { RS2_STREAM_INFRARED,       RS2_FORMAT_BGRA8} } } } };
@@ -1029,10 +1100,10 @@ namespace librealsense
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_BGR8 >,                { { RS2_STREAM_COLOR,          RS2_FORMAT_BGR8 } } },
                                                                                { true,                &unpack_yuy2<RS2_FORMAT_BGRA8>,                { { RS2_STREAM_COLOR,          RS2_FORMAT_BGRA8 } } } } };
 
-    const native_pixel_format pf_accel_axes               = { 'ACCL', 1, 1, {  { true,                &unpack_accel_axes<RS2_FORMAT_MOTION_XYZ32F>,  { { RS2_STREAM_ACCEL,          RS2_FORMAT_MOTION_XYZ32F } } },
-                                                                               { false,               &unpack_hid_raw_data,                          { { RS2_STREAM_ACCEL,          RS2_FORMAT_MOTION_RAW  } } }} };
-    const native_pixel_format pf_gyro_axes                = { 'GYRO', 1, 1, {  { true,                &unpack_gyro_axes<RS2_FORMAT_MOTION_XYZ32F>,   { { RS2_STREAM_GYRO,           RS2_FORMAT_MOTION_XYZ32F } } },
-                                                                               { false,               &unpack_hid_raw_data,                          { { RS2_STREAM_GYRO,           RS2_FORMAT_MOTION_RAW  } } }} };
+    const native_pixel_format pf_accel_axes               = { 'ACCL', 1, 1, {  { true,                &unpack_accel_axes<RS2_FORMAT_MOTION_XYZ32F>,  { { RS2_STREAM_ACCEL,          RS2_FORMAT_MOTION_XYZ32F } } } } };
+                                                                               //{ false,               &unpack_hid_raw_data,                          { { RS2_STREAM_ACCEL,          RS2_FORMAT_MOTION_RAW  } } } } };
+    const native_pixel_format pf_gyro_axes                = { 'GYRO', 1, 1, {  { true,                &unpack_gyro_axes<RS2_FORMAT_MOTION_XYZ32F>,   { { RS2_STREAM_GYRO,           RS2_FORMAT_MOTION_XYZ32F } } } } };
+                                                                               //{ false,               &unpack_hid_raw_data,                          { { RS2_STREAM_GYRO,           RS2_FORMAT_MOTION_RAW  } } } } };
     const native_pixel_format pf_gpio_timestamp           = { 'GPIO', 1, 1, {  { false,               &unpack_input_reports_data,                  { { { RS2_STREAM_GPIO, 1 },      RS2_FORMAT_GPIO_RAW },
                                                                                                                                                      { { RS2_STREAM_GPIO, 2 },      RS2_FORMAT_GPIO_RAW },
                                                                                                                                                      { { RS2_STREAM_GPIO, 3 },      RS2_FORMAT_GPIO_RAW },

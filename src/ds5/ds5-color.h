@@ -30,7 +30,7 @@ namespace librealsense
         std::shared_ptr<lazy<rs2_extrinsics>> _color_extrinsic;
     };
 
-    class ds5_color_sensor : public uvc_sensor, 
+    class ds5_color_sensor : public uvc_sensor,
                              public video_sensor_interface,
                              public roi_sensor_base
     {
@@ -43,6 +43,7 @@ namespace librealsense
 
         rs2_intrinsics get_intrinsics(const stream_profile& profile) const override;
         stream_profiles init_stream_profiles() override;
+        processing_blocks get_recommended_processing_blocks() const override;
 
     private:
         const ds5_color* _owner;

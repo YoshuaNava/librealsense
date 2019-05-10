@@ -1,3 +1,5 @@
+# License: Apache 2.0. See LICENSE file in root directory.
+# Copyright(c) 2019 Intel Corporation. All Rights Reserved.
 #  minimum required cmake version: 3.1.0
 cmake_minimum_required(VERSION 3.1.0)
 
@@ -20,9 +22,6 @@ else()
         set(DEPENDENCIES realsense2 log)
     else()
         set(DEPENDENCIES realsense2)
-    endif()
-    if(NOT WIN32)
-        list(APPEND DEPENDENCIES m ${LIBUSB1_LIBRARIES})
     endif()
 endif()
 

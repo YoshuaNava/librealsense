@@ -1,3 +1,5 @@
+# License: Apache 2.0. See LICENSE file in root directory.
+# Copyright(c) 2019 Intel Corporation. All Rights Reserved.
 cmake_minimum_required(VERSION 2.8)
 project(libtm)
 
@@ -13,17 +15,13 @@ set(LIBVERSION ${LIBTM_VERSION_MAJOR}.${LIBTM_VERSION_MINOR}.${LIBTM_VERSION_PAT
 
 # Retrieve Git branch name
 execute_process(COMMAND git rev-parse --abbrev-ref HEAD
-                WORKING_DIRECTORY "${LIBTM_ROOT}"
+                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
                 OUTPUT_VARIABLE GIT_BRANCH
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET)
 
-message(STATUS "--------------------------------------------------------------------------------------------------------------------------------------------------------------")
-message(STATUS "Building ${PROJECT_NAME} project on ${OS}, LIBTM version [${LIBTM_VERSION_MAJOR}.${LIBTM_VERSION_MINOR}.${LIBTM_VERSION_PATCH}.${LIBTM_VERSION_BUILD}], API version [${LIBTM_API_VERSION_MAJOR}.${LIBTM_API_VERSION_MINOR}], branch [${GIT_BRANCH}], FW [${FW_VERSION}], Central APP [${CENTRAL_APP_VERSION}], Central BL [${CENTRAL_BL_VERSION}]")
+if(GIT_BRANCH STREQUAL "")
+    set (GIT_BRANCH "Branch_Unknown")
+endif()
 
-# Configure version file according to libtm version definitions and branch name above
-message(STATUS "Creating version file ${PROJECT_SOURCE_DIR}/src/Version.h")
-configure_file("${PROJECT_SOURCE_DIR}/src/Version.h.in" "${PROJECT_SOURCE_DIR}/src/Version.h")
-configure_file("${PROJECT_SOURCE_DIR}/src/version.rc.in" "${PROJECT_SOURCE_DIR}/src/version.rc")
-
-# Add subdirectory to the build
 add_subdirectory(src)

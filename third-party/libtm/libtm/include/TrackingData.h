@@ -12,7 +12,7 @@ namespace perc
     #define SENSOR_TYPE_MASK (0x001F << SENSOR_TYPE_POS) /**< Bits 0-4 */
     #define SENSOR_INDEX_POS (5)
     #define SENSOR_INDEX_MASK (0x0007 << SENSOR_INDEX_POS) /**< Bits 5-7 */
-    #define SET_SENSOR_ID(_type, _index) (((_type << SENSOR_TYPE_POS) & SENSOR_TYPE_MASK) | ((_index << SENSOR_INDEX_POS) & SENSOR_INDEX_MASK))
+    #define SET_SENSOR_ID(_type, _index) ((((_type) << SENSOR_TYPE_POS) & SENSOR_TYPE_MASK) | (((_index) << SENSOR_INDEX_POS) & SENSOR_INDEX_MASK))
     #define GET_SENSOR_INDEX(_sensorID) ((_sensorID & SENSOR_INDEX_MASK) >> SENSOR_INDEX_POS)
     #define GET_SENSOR_TYPE(_sensorID) ((_sensorID & SENSOR_TYPE_MASK) >> SENSOR_TYPE_POS)
     #define MAX_VIDEO_STREAMS 8
@@ -24,6 +24,7 @@ namespace perc
     #define MAX_LOG_BUFFER_ENTRIES 1024
     #define MAX_LOG_BUFFER_ENTRY_SIZE (256)
     #define MAX_LOG_BUFFER_MODULE_SIZE (32)
+    #define MAX_CALIBRATION_SIZE 10000
     
     enum ProfileType
     {
@@ -115,6 +116,12 @@ namespace perc
         AddressTypeMax = 0x0002,    /**< Unspecified Address */
     };
 
+    enum CalibrationType {
+        CalibrationTypeNew = 0x0000,    /**< New calibration overrides previous calibration */
+        CalibrationTypeAppend = 0x0001, /**< Append calibration to previous calibration     */
+        CalibrationTypeMax = 0x0002,    /**< Unspecified calibration type                   */
+    };
+
     class TrackingData
     {
     public:
@@ -195,7 +202,7 @@ namespace perc
 
         class PoseFrame : public TimestampedData {
         public:
-            PoseFrame() : sourceIndex(0), trackerConfidence(0), mapperConfidence(0) {};
+            PoseFrame() : sourceIndex(0), trackerConfidence(0), mapperConfidence(0), trackerState(0) {};
             uint8_t sourceIndex;             /**< Index of HMD or controller - 0x0 = HMD, 0x1 - controller 1, 0x2 - controller 2                             */
             Axis translation;                /**< X, Y, Z values of translation, in meters (relative to initial position)                                    */
             Axis velocity;                   /**< X, Y, Z values of velocity, in meter/sec                                                                   */
@@ -205,6 +212,7 @@ namespace perc
             EulerAngles angularAcceleration; /**< X, Y, Z values of angular acceleration, in radians/sec^2                                                   */
             uint32_t trackerConfidence;      /**< pose data confidence 0x0 - Failed, 0x1 - Low, 0x2 - Medium, 0x3 - High                                     */
             uint32_t mapperConfidence;       /**< pose data confidence 0x0 - Failed, 0x1 - Low, 0x2 - Medium, 0x3 - High                                     */
+            uint32_t trackerState;           /**< tracker state 0x0 - Inactive, 0x3 - Running (3dof), 0x4 - Running (6dof), 0x7 - Inertial Only (3dof)       */
         };
 
         class GyroFrame : public TimestampedData {
@@ -221,7 +229,7 @@ namespace perc
             VelocimeterFrame() : temperature(0), sensorIndex(0), frameId(0) {};
             uint8_t sensorIndex;  /**< Zero based index of sensor with the same type within device         */
             uint32_t frameId;     /**< A running index of frames from every unique sensor, starting from 0 */
-            Axis angularVelocity; /**< X, Y, Z values of velocimeter, in radians/sec                       */
+            Axis translationalVelocity; /**< X, Y, Z values of velocimeter, in meters/sec                       */
             float temperature;    /**< Velocimeter temperature                                             */
         };
 
@@ -560,7 +568,7 @@ namespace perc
             public:
                 UsbConnectionDescriptor() : idVendor(0), idProduct(0), bcdUSB(0), port(0), bus(0), portChainDepth(0), portChain{0} {}
                 uint16_t idVendor;                     /**< USB Vendor ID: DFU Device = 0x03E7, Device = 0x8087                                                   */
-                uint16_t idProduct;                    /**< USB Product ID: DFU Device = 0x2150, Device = 0x0AF3                                                  */
+                uint16_t idProduct;                    /**< USB Product ID: DFU Device = 0x2150, Device = 0x0AF3 for T260, 0B37 for T265                          */
                 uint16_t bcdUSB;                       /**< USB specification release number: 0x100 = USB 1.0, 0x110 = USB 1.1, 0x200 = USB 2.0, 0x300 = USB 3.0  */
                 uint8_t port;                          /**< Number of the port that the device is connected to                                                    */
                 uint8_t bus;                           /**< Number of the bus that the device is connected to                                                     */
@@ -590,13 +598,14 @@ namespace perc
                 Version rom;               /**< Myriad ROM version - only major part is active                                                                 */
             };
 
-            DeviceInfo() : deviceType(0), serialNumber(0), numGyroProfile(0), numVelocimeterProfile(0), numAccelerometerProfiles(0), numVideoProfiles(0), eepromLockState(LockStateMax) {};
+            DeviceInfo() : deviceType(0), serialNumber(0), skuInfo(0), numGyroProfile(0), numVelocimeterProfile(0), numAccelerometerProfiles(0), numVideoProfiles(0), eepromLockState(LockStateMax) {};
             UsbConnectionDescriptor usbDescriptor; /**< USB Connection Descriptor includes USB info and physical location            */
             DeviceStatus status;                   /**< HW and Host status                                                           */
             DeviceVersion version;                 /**< HW, FW, Host, Central, EEPROM, ROM, interface versions                       */
             EepromLockState eepromLockState;       /**< EEPROM Lock state                                                            */
-            uint8_t deviceType;                    /**< Device identifier: 0x1 = T250                                                */
+            uint8_t deviceType;                    /**< Device identifier: 0x1 = TM2                                                 */
             uint64_t serialNumber;                 /**< Device serial number                                                         */
+            uint8_t  skuInfo;                      /**< 1 for T260 - with ble, 0 for T265 - w/o ble                                  */
             uint8_t  numGyroProfile;               /**< Number of Gyro Supported Profiles returned by Supported RAW Streams          */
             uint8_t  numVelocimeterProfile;        /**< Number of Velocimeter Supported Profiles returned by Supported RAW Streams   */
             uint8_t  numAccelerometerProfiles;     /**< Number of Accelerometer Supported Profiles returned by Supported RAW Streams */
@@ -668,7 +677,7 @@ namespace perc
             float_t ppy;              /**< Vertical coordinate of the principal point of the image, as a pixel offset from the top edge                                           */
             float_t fx;               /**< Focal length of the image plane, as a multiple of pixel width                                                                          */
             float_t fy;               /**< Focal length of the image plane, as a multiple of pixel Height                                                                         */
-            uint32_t distortionModel; /**< Distortion model of the image: NONE = 0, MODIFIED_BROWN_CONRADY = 1, INVERSE_BROWN_CONRADY = 2, FTHETA = 3, KANNALA_BRANDT4 = 4        */
+            uint32_t distortionModel; /**< Distortion model of the image: F-THETA = 1, NONE (UNDISTORTED) = 3, KANNALA_BRANDT4 = 4                                                */
             float_t coeffs[5];        /**< Distortion coefficients                                                                                                                */
         };
 
@@ -762,11 +771,25 @@ namespace perc
             uint8_t* buffer;     /**< Localization data buffer pointer of max size MAX_CONFIGURATION_SIZE bytes, Data format is algorithm specific and opaque to the USB and host stack */
         };
 
+        class RelocalizationEvent {
+        public:
+            int64_t timestamp;   /**< Timestamp of relocalization, measured in nanoseconds since device system initialization             */
+            SessionId sessionId; /**< Id of session matched by relocalization. 0x0 for current session, greater than 0 for loaded session */
+        };
+
         class RelativePose {
         public:
             RelativePose() {};
             Axis translation;    /**< X, Y, Z values of translation, in meters (in the coordinate system of the tracker relative to the current position)                                    */
             Quaternion rotation; /**< Qi, Qj, Qk, Qr components of rotation as represented in quaternion rotation (in the coordinate system of the tracker relative to the current position) */
+        };
+
+        class CalibrationData {
+        public:
+            CalibrationData() : type(CalibrationTypeMax), length(0), buffer(NULL) { };
+            CalibrationType type; /**< Type of calibration (New - override previous calibration, Append - join to previous set calibration                                            */
+            uint32_t length;      /**< The length in bytes of the calibration buffer                                                                                                  */
+            uint8_t* buffer;      /**< Calibration data buffer pointer of max size MAX_CALIBRATION_SIZE bytes, Data format is algorithm specific and opaque to the USB and host stack */
         };
 
         class GeoLocalization {

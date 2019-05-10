@@ -20,6 +20,7 @@
 #include <cstring>
 #include <string>
 #include <sstream>
+#include <fstream>
 
 
 const uint16_t MAX_RETRIES                = 100;
@@ -206,6 +207,7 @@ namespace librealsense
             uint16_t mi = 0;
             std::string unique_id = "";
             std::string device_path = "";
+            std::string serial = "";
             usb_spec conn_spec = usb_undefined;
             uint32_t uvc_capabilities = 0;
             bool has_metadata_node = false;
@@ -253,6 +255,7 @@ namespace librealsense
             uint16_t pid;
             uint16_t mi;
             std::string unique_id;
+            std::string serial;
             usb_spec conn_spec;
 
             operator std::string()
@@ -287,6 +290,7 @@ namespace librealsense
             std::string pid;
             std::string unique_id;
             std::string device_path;
+            std::string serial_number;
 
             operator std::string()
             {
@@ -331,7 +335,7 @@ namespace librealsense
         {
             void* device_ptr;
 
-            operator std::string()
+            operator std::string() const
             {
                 std::ostringstream oss;
                 oss << device_ptr;
@@ -384,6 +388,7 @@ namespace librealsense
             value
         };
 
+#pragma pack(push, 1)
         struct hid_sensor_data
         {
             short x;
@@ -395,6 +400,7 @@ namespace librealsense
             uint32_t ts_low;
             uint32_t ts_high;
         };
+#pragma pack(pop)
 
         typedef std::function<void(const sensor_data&)> hid_callback;
 
@@ -668,6 +674,12 @@ namespace librealsense
             virtual std::shared_ptr<time_service> create_time_service() const = 0;
 
             virtual std::shared_ptr<device_watcher> create_device_watcher() const = 0;
+
+            virtual std::string get_device_serial(uint16_t device_vid, uint16_t device_pid, const std::string& device_uid) const
+            {
+                std::string empty_str;
+                return empty_str;
+            }
 
             virtual ~backend() = default;
         };

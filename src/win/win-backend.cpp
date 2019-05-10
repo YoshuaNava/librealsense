@@ -23,7 +23,7 @@ namespace librealsense
     {
         wmf_backend::wmf_backend()
         {
-            CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+            CoInitializeEx(nullptr, COINIT_MULTITHREADED); // when using COINIT_APARTMENTTHREADED, calling _pISensor->SetEventSink(NULL) to stop sensor can take several seconds
             MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
         }
 
@@ -54,9 +54,11 @@ namespace librealsense
         {
             std::vector<uvc_device_info> devices;
 
-            auto action = [&devices](const uvc_device_info& info, IMFActivate*)
+            auto action = [&devices, this](const uvc_device_info& info, IMFActivate*)
             {
-                devices.push_back(info);
+                uvc_device_info device_info = info;
+                device_info.serial = this->get_device_serial(info.vid, info.pid, info.unique_id);
+                devices.push_back(device_info);
             };
 
             wmf_uvc_device::foreach_uvc_device(action);
@@ -83,9 +85,10 @@ namespace librealsense
                 {
                     std::string path(id.begin(), id.end());
                     uint16_t vid, pid, mi; std::string unique_id;
-                    if (!parse_usb_path(vid, pid, mi, unique_id, path)) continue;
+                    if (!parse_usb_path_multiple_interface(vid, pid, mi, unique_id, path)) continue;
 
-                    usb_device_info info{ path, vid, pid, mi, unique_id, usb_undefined };
+                    auto device_serial = get_device_serial(vid, pid, unique_id);
+                    usb_device_info info{ path, vid, pid, mi, unique_id, device_serial, usb_undefined };
 
                     result.push_back(info);
                 }
@@ -94,22 +97,27 @@ namespace librealsense
             return result;
         }
 
+        wmf_hid_device::wmf_hid_device(const hid_device_info& info)
+        {
+            bool found = false;
+
+            wmf_hid_device::foreach_hid_device([&](const hid_device_info& hid_dev_info, CComPtr<ISensor> sensor) {
+                if (hid_dev_info.unique_id == info.unique_id)
+                {
+                    _connected_sensors.push_back(std::make_shared<wmf_hid_sensor>(hid_dev_info, sensor));
+                    found = true;
+                }
+            });
+
+            if (!found)
+            {
+                LOG_ERROR("hid device is no longer connected!");
+            }
+        }
+
         std::shared_ptr<hid_device> wmf_backend::create_hid_device(hid_device_info info) const
         {
-            std::shared_ptr<hid_device> result = nullptr;
-
-            auto action = [&result, &info](const hid_device_info& i, CComPtr<ISensor> ptr)
-            {
-                if (info.device_path == i.device_path)
-                {
-                    result = std::make_shared<wmf_hid_device>(ptr);
-                }
-            };
-
-            wmf_hid_device::foreach_hid_device(action);
-
-            if (result.get()) return result;
-            throw std::runtime_error("Device no longer found!");
+            return std::make_shared<wmf_hid_device>(info);
         }
 
         std::vector<hid_device_info> wmf_backend::query_hid_devices() const
@@ -256,7 +264,12 @@ namespace librealsense
                         //                            { return info.device_path.substr(0, info.device_path.find_first_of("{")) == path; }), next.usb_devices.end());
                         next.usb_devices = data->_backend->query_usb_devices();
                         next.hid_devices.erase(std::remove_if(next.hid_devices.begin(), next.hid_devices.end(), [&path](const hid_device_info& info)
-                        { return info.device_path.substr(0, info.device_path.find_first_of("{")) == path; }), next.hid_devices.end());
+                        {
+                            auto sub = info.device_path.substr(0, info.device_path.find_first_of("{"));
+                            std::transform(sub.begin(), sub.end(), sub.begin(), ::tolower);
+                            return sub == path;
+                            
+                        }), next.hid_devices.end());
 
                         /*if (data->_last != next)*/ data->_callback(data->_last, next);
                         data->_last = next;
@@ -327,6 +340,26 @@ namespace librealsense
                     LOG_WARNING("Register UVC events Failed!\n");
                     return FALSE;
                 }
+
+                ////===========================register HID sensor camera events==============================
+                static const GUID GUID_DEVINTERFACE_HID =
+                { 0x4d1e55b2,0xf16f,0x11cf,{0x88,0xcb,0x00,0x11,0x11,0x00,0x00,0x30} };
+
+                DEV_BROADCAST_DEVICEINTERFACE hid_sensor = { 0 };
+                hid_sensor.dbcc_size = sizeof(hid_sensor);
+                hid_sensor.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+                hid_sensor.dbcc_classguid = GUID_DEVINTERFACE_HID;
+
+                data->hdevnotify_sensor = RegisterDeviceNotification(hWnd,
+                    &hid_sensor,
+                    DEVICE_NOTIFY_WINDOW_HANDLE);
+                if (data->hdevnotify_sensor == nullptr)
+                {
+                    UnregisterDeviceNotification(data->hdevnotify_sensor);
+                    LOG_WARNING("Register UVC events Failed!\n");
+                    return FALSE;
+                }
+
                 return TRUE;
             }
         };
@@ -334,6 +367,17 @@ namespace librealsense
         std::shared_ptr<device_watcher> wmf_backend::create_device_watcher() const
         {
             return std::make_shared<win_event_device_watcher>(this);
+        }
+
+        std::string wmf_backend::get_device_serial(uint16_t device_vid, uint16_t device_pid, const std::string& device_uid) const
+        {
+            std::string device_serial = "";
+            std::string location = "";
+            usb_spec spec = usb_undefined;
+
+            platform::get_usb_descriptors(device_vid, device_pid, device_uid, location, spec, device_serial);
+
+            return device_serial;
         }
     }
 }

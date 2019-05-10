@@ -101,6 +101,7 @@ namespace librealsense
         virtual void acquire() = 0;
         virtual void release() = 0;
         virtual frame_interface* publish(std::shared_ptr<archive_interface> new_owner) = 0;
+        virtual void unpublish() = 0;
         virtual void attach_continuation(frame_continuation&& continuation) = 0;
         virtual void disable_continuation() = 0;
 
@@ -119,7 +120,7 @@ namespace librealsense
         virtual ~frame_interface() = default;
     };
 
-    struct frame_holder
+    struct LRS_EXTENSION_API frame_holder
     {
         frame_interface* frame;
 
@@ -161,8 +162,55 @@ namespace librealsense
 
     using on_frame = std::function<void(frame_interface*)>;
     using stream_profiles = std::vector<std::shared_ptr<stream_profile_interface>>;
+    using processing_blocks = std::vector<std::shared_ptr<processing_block_interface>>;
 
-    class sensor_interface : public virtual info_interface, public virtual options_interface
+
+    class recommended_proccesing_blocks_interface
+    {
+    public:
+        virtual processing_blocks get_recommended_processing_blocks() const = 0;
+        virtual ~recommended_proccesing_blocks_interface() = default;
+    };
+    MAP_EXTENSION(RS2_EXTENSION_RECOMMENDED_FILTERS, librealsense::recommended_proccesing_blocks_interface);
+
+    class recommended_proccesing_blocks_snapshot : public recommended_proccesing_blocks_interface, public extension_snapshot
+    {
+    public:
+        recommended_proccesing_blocks_snapshot(const processing_blocks blocks)
+            :_blocks(blocks) {}
+
+         virtual processing_blocks get_recommended_processing_blocks() const override
+        {
+            return _blocks;
+        }
+         
+        void update(std::shared_ptr<extension_snapshot> ext) override {}
+
+        processing_blocks _blocks;
+    };
+   
+
+    class recommended_proccesing_blocks_base : public virtual recommended_proccesing_blocks_interface, public virtual recordable<recommended_proccesing_blocks_interface>
+    {
+    public:
+        recommended_proccesing_blocks_base(recommended_proccesing_blocks_interface* owner)
+            :_owner(owner)
+        {}
+        
+        virtual processing_blocks get_recommended_processing_blocks() const override { return _owner->get_recommended_processing_blocks(); };
+
+        virtual void create_snapshot(std::shared_ptr<recommended_proccesing_blocks_interface>& snapshot) const override
+        {
+            snapshot = std::make_shared<recommended_proccesing_blocks_snapshot>(get_recommended_processing_blocks());
+        }
+
+        virtual void enable_recording(std::function<void(const recommended_proccesing_blocks_interface&)> recording_function)  override {}
+
+    private:
+        recommended_proccesing_blocks_interface* _owner;
+    };
+
+    class sensor_interface : public virtual info_interface, public virtual options_interface, public virtual recommended_proccesing_blocks_interface
     {
     public:
         virtual stream_profiles get_stream_profiles(int tag = profile_tag::PROFILE_TAG_ANY) const = 0;
@@ -213,6 +261,10 @@ namespace librealsense
         virtual std::vector<tagged_profile> get_profiles_tags() const = 0;
 
         virtual void tag_profiles(stream_profiles profiles) const = 0;
+
+        virtual bool compress_while_record() const = 0;
+
+        virtual bool contradicts(const stream_profile_interface* a, const std::vector<stream_profile>& others) const = 0;
     };
 
     class depth_stereo_sensor;
@@ -270,7 +322,7 @@ namespace librealsense
             depth_sensor_snapshot(depth_units),
             m_stereo_baseline_mm(stereo_bl_mm) {}
 
-        float get_stereo_baseline_mm() const
+        float get_stereo_baseline_mm() const override
         {
             return m_stereo_baseline_mm;
         }

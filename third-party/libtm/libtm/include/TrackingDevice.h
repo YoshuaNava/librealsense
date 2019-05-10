@@ -116,6 +116,14 @@ namespace perc
             virtual void onLocalizationDataEventFrame(OUT TrackingData::LocalizationDataFrame& frame) {}
 
             /**
+            * @brief onRelocalizationEvent
+            *        The function will be called once TrackingDevice has a new relocalization event
+            *
+            * @param event - Relocalization event
+            */
+            virtual void onRelocalizationEvent(OUT TrackingData::RelocalizationEvent& event) {}
+
+            /**
             * @brief onFWUpdateEvent
             *        The host interface shall support firmware update progress events
             *
@@ -326,9 +334,10 @@ namespace perc
         * @param type - Hardware or software.
         * @param lock - False: unlock the configuration table.
         *               True: lock the configuration table.
+        * @param tableType - which configuration lable to lock. valid for SW lock only!
         * @return Status
         */
-        virtual Status LockConfiguration(IN LockType type, IN bool lock) = 0;
+        virtual Status LockConfiguration(IN LockType type, IN bool lock, IN uint16_t tableType = 0xFFFF) = 0;
 
         /**
         * @brief PermanentLockConfiguration
@@ -337,9 +346,10 @@ namespace perc
         *        Warning - This is an irreversible action.
         * @param type - Hardware or software.
         * @param token - Secured token
+        * @param tableType - which configuration lable to lock. valid for SW lock only!
         * @return Status
         */
-        virtual Status PermanentLockConfiguration(IN LockType type, IN uint32_t token) = 0;
+        virtual Status PermanentLockConfiguration(IN LockType type, IN uint32_t token, IN uint16_t tableType = 0xFFFF) = 0;
 
         /**
         * @brief ReadConfiguration
@@ -400,14 +410,6 @@ namespace perc
         virtual Status SetLocalizationData(IN Listener* listener, IN uint32_t length, IN const uint8_t* buffer) = 0;
 
         /**
-        * @brief ResetLocalizationData
-        *        Resets the localization data
-        * @param flag - 0 - Reset all localization data tables, 1 - reset only the map by its mapIndex
-        * @return Status
-        */
-        virtual Status ResetLocalizationData(IN uint8_t flag) = 0;
-
-        /**
         * @brief SetStaticNode
         *        Set a relative position of a static node
         * @param guid - Unique name (Null-terminated C-string) for the static node, max length is 127 bytes plus one byte for the terminating null character
@@ -460,6 +462,15 @@ namespace perc
         virtual Status EepromWrite(IN uint16_t offset, IN uint16_t size, IN uint8_t* buffer, OUT uint16_t& actual, IN bool verify = false) = 0;
 
         /**
+        * @brief SetLowPowerMode
+        *        Enable or disable low power mode in idle state in TM2 device.
+        * @param enable - true to enable low power mode, false to disable
+        *
+        * @return Status
+        */
+        virtual Status SetLowPowerMode(bool enable) = 0;
+
+        /**
         * @brief Reset
         *        Resets the device and loads FW
         *        Caution - this function is non blocking, need to sleep at least 2 seconds afterwards to let the FW load again
@@ -467,6 +478,15 @@ namespace perc
         * @return Status
         */
         virtual Status Reset(void) = 0;
+
+        /**
+        * @brief SetCalibration
+        *        Set new or Append calibration to current SLAM calibration
+        * @param calibrationData - Calibration data
+        *
+        * @return Status
+        */
+        virtual Status SetCalibration(const TrackingData::CalibrationData& calibrationData) = 0;
 
         /**
         * @brief SendFrame

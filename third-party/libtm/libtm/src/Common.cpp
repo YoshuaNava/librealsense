@@ -50,7 +50,6 @@ perc::Status fwToHostStatus(perc::MESSAGE_STATUS status)
         case MESSAGE_STATUS::AUTH_ERROR: return Status::AUTH_ERROR;
         case MESSAGE_STATUS::DEVICE_RESET: return Status::DEVICE_RESET;
         case MESSAGE_STATUS::LIST_TOO_BIG: return Status::LIST_TOO_BIG;
-        case MESSAGE_STATUS::NO_BLUETOOTH: return Status::NO_BLUETOOTH;
         default:
             return perc::Status::COMMON_ERROR;
     }
@@ -120,7 +119,8 @@ TrackingData::PoseFrame poseMessageToClass(perc::pose_data msg, uint8_t sourceIn
     pose.velocity.set(msg.flVx, msg.flVy, msg.flVz);
     pose.trackerConfidence = msg.dwTrackerConfidence;
     pose.mapperConfidence = msg.dwMapperConfidence;
-     
+    pose.trackerState = msg.dwTrackerState;
+
     return pose;
 }
 
@@ -256,6 +256,7 @@ std::string messageCodeToString(libusb_transfer_type type, uint16_t code)
                 case DEV_RESET_CONFIGURATION:               return "DEV_RESET_CONFIGURATION";
                 case DEV_LOCK_CONFIGURATION:                return "DEV_LOCK_CONFIGURATION";
                 case DEV_LOCK_EEPROM:                       return "DEV_LOCK_EEPROM";
+                case DEV_SET_LOW_POWER_MODE:                return "DEV_SET_LOW_POWER_MODE";
                 case SLAM_STATUS:                           return "SLAM_STATUS";
                 case SLAM_GET_OCCUPANCY_MAP_TILES:          return "SLAM_GET_OCCUPANCY_MAP_TILES";
                 case SLAM_GET_LOCALIZATION_DATA:            return "SLAM_GET_LOCALIZATION_DATA";
@@ -263,10 +264,11 @@ std::string messageCodeToString(libusb_transfer_type type, uint16_t code)
                 case SLAM_SET_6DOF_INTERRUPT_RATE:          return "SLAM_SET_6DOF_INTERRUPT_RATE";
                 case SLAM_6DOF_CONTROL:                     return "SLAM_6DOF_CONTROL";
                 case SLAM_OCCUPANCY_MAP_CONTROL:            return "SLAM_OCCUPANCY_MAP_CONTROL";
-                case SLAM_RESET_LOCALIZATION_DATA:          return "SLAM_RESET_LOCALIZATION_DATA";
                 case SLAM_GET_LOCALIZATION_DATA_STREAM:     return "SLAM_GET_LOCALIZATION_DATA_STREAM";
                 case SLAM_SET_STATIC_NODE:                  return "SLAM_SET_STATIC_NODE";
                 case SLAM_GET_STATIC_NODE:                  return "SLAM_GET_STATIC_NODE";
+                case SLAM_APPEND_CALIBRATION:               return "SLAM_APPEND_CALIBRATION";
+                case SLAM_RELOCALIZATION_EVENT:             return "SLAM_RELOCALIZATION_EVENT";
                 case CONTROLLER_POSE_CONTROL:               return "CONTROLLER_POSE_CONTROL";
                 case CONTROLLER_STATUS_CHANGE_EVENT:        return "CONTROLLER_STATUS_CHANGE_EVENT";
                 case CONTROLLER_DEVICE_CONNECT:             return "CONTROLLER_DEVICE_CONNECT";
@@ -321,7 +323,6 @@ std::string statusCodeToString(perc::MESSAGE_STATUS status)
         case MESSAGE_STATUS::CRC_ERROR:                return "CRC_ERROR";
         case MESSAGE_STATUS::INCOMPATIBLE:             return "INCOMPATIBLE";
         case MESSAGE_STATUS::SLAM_NO_DICTIONARY:       return "SLAM_NO_DICTIONARY";
-        case MESSAGE_STATUS::NO_BLUETOOTH:             return "NO_BLUETOOTH";
         default:                                       return "UNKNOWN STATUS";
     } 
 }

@@ -1,20 +1,12 @@
+# License: Apache 2.0. See LICENSE file in root directory.
+# Copyright(c) 2019 Intel Corporation. All Rights Reserved.
 #  minimum required cmake version: 3.1.0
 cmake_minimum_required(VERSION 3.1.0)
 
 project(RealsenseToolsDepthQuality)
 
-# Save the command line compile commands in the build output
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
-
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-endif()
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 if(BUILD_GRAPHICAL_EXAMPLES)
 
@@ -38,6 +30,8 @@ endif()
             ./depth-quality-model.h
             ./depth-quality-model.cpp
             ./depth-metrics.h
+            ${LZ4_DIR}/lz4.h
+            ${LZ4_DIR}/lz4.c
             ../../common/rendering.h
             ../../common/ux-window.h
             ../../common/ux-window.cpp
@@ -50,7 +44,16 @@ endif()
             ../../third-party/imgui/imgui-fonts-fontawesome.hpp
             ../../common/ux-alignment.cpp
             ../../common/ux-alignment.h
+            ../../third-party/glad/glad.c
+            ../../common/opengl3.cpp
+            ../../common/opengl3.h
+            ../../common/rs-config.h
+            ../../common/rs-config.cpp
+            ../../common/os.h
+            ../../common/os.cpp
         )
+
+     include_directories(${LZ4_DIR})
 
     if(WIN32)
         add_executable(rs-depth-quality WIN32 ${RS_QUALITY_TOOL_CPP}
@@ -58,6 +61,7 @@ endif()
                 ${CMAKE_CURRENT_SOURCE_DIR}/res/realsense-viewer.rc
                 ../../common/windows-app-bootstrap.cpp)
 
+        set_property(TARGET rs-depth-quality PROPERTY CXX_STANDARD 11)
         source_group("Resources" FILES
                 ${CMAKE_CURRENT_SOURCE_DIR}/res/resource.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/res/realsense-viewer.rc)
@@ -82,6 +86,7 @@ endif()
 
         include_directories(rs-depth-quality ../../common  ../../third-party
                                              ../../third-party/imgui
+                                             ../../third-party/glad
                                              ../../third-party/tclap/include
                                              ${CMAKE_CURRENT_SOURCE_DIR}/res/)
 
@@ -90,10 +95,13 @@ endif()
 
         include_directories(rs-depth-quality ../../common  ../../third-party
                                              ../../third-party/imgui
+                                             ../../third-party/glad
                                              ../../third-party/tclap/include)
     endif()
 
-    target_link_libraries(rs-depth-quality ${DEPENDENCIES} ${GTK3_LIBRARIES})
+    target_link_libraries(rs-depth-quality ${DEPENDENCIES}
+                                           ${GTK3_LIBRARIES}
+                                           Threads::Threads)
     set_target_properties (rs-depth-quality PROPERTIES
         FOLDER Tools
     )

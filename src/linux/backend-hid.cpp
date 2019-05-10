@@ -7,41 +7,11 @@
 #include "backend.h"
 #include "types.h"
 
-#include <cassert>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-
-#include <algorithm>
-#include <functional>
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <regex>
 #include <thread>
-#include <utility> // for pair
-#include <chrono>
-#include <thread>
-#include <atomic>
 
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <limits.h>
-#include <cmath>
-#include <errno.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <sys/ioctl.h>
-#include <linux/usb/video.h>
-#include <linux/uvcvideo.h>
-#include <linux/videodev2.h>
-#include <fts.h>
-#include <regex>
-#include <list>
-
-#include <sys/signalfd.h>
-#include <signal.h>
 
 #pragma GCC diagnostic ignored "-Woverflow"
 
@@ -268,9 +238,8 @@ namespace librealsense
             _callback = sensor_callback;
             _is_capturing = true;
             _hid_thread = std::unique_ptr<std::thread>(new std::thread([this, read_device_path_str](){
-                static const uint32_t buf_len = 128;
                 const uint32_t channel_size = 24; // TODO: why 24?
-                std::vector<uint8_t> raw_data(channel_size * buf_len);
+                std::vector<uint8_t> raw_data(channel_size * hid_buf_len);
 
                 do {
                     fd_set fds;
@@ -456,13 +425,15 @@ namespace librealsense
         }
 
         iio_hid_sensor::iio_hid_sensor(const std::string& device_path, uint32_t frequency)
-            : _iio_device_path(device_path),
+            : _stop_pipe_fd{},
+              _fd(0),
+              _iio_device_number(0),
+              _iio_device_path(device_path),
               _sensor_name(""),
+              _sampling_frequency_name(""),
               _callback(nullptr),
               _is_capturing(false),
-              _sampling_frequency_name(""),
-              _fd(0),
-              _stop_pipe_fd{}
+              _pm_dispatcher(16)    // queue for async power management commands
         {
             init(frequency);
         }
@@ -471,7 +442,8 @@ namespace librealsense
         {
             try
             {
-                write_integer_to_param("buffer/enable", 0);
+                // Ensure PM sync
+                _pm_dispatcher.flush();
                 stop_capture();
 
                 clear_buffer();
@@ -488,6 +460,7 @@ namespace librealsense
             if (_is_capturing)
                 return;
 
+            set_power(true);
             std::ostringstream iio_read_device_path;
             iio_read_device_path << "/dev/" << IIO_DEVICE_PREFIX << _iio_device_number;
 
@@ -533,7 +506,7 @@ namespace librealsense
             _is_capturing = true;
             _hid_thread = std::unique_ptr<std::thread>(new std::thread([this](){
                 const uint32_t channel_size = get_channel_size();
-                auto raw_data_size = channel_size*buf_len;
+                auto raw_data_size = channel_size*hid_buf_len;
 
                 std::vector<uint8_t> raw_data(raw_data_size);
                 auto metadata = has_metadata();
@@ -586,6 +559,12 @@ namespace librealsense
                             auto hid_data_size = channel_size - HID_METADATA_SIZE;
 
                             sens_data.fo = {hid_data_size, metadata?HID_METADATA_SIZE: uint8_t(0),  p_raw_data,  metadata?p_raw_data + hid_data_size:nullptr};
+                            //Linux HID provides timestamps in nanosec. Convert to usec (FW default)
+                            if (metadata)
+                            {
+                                auto* ts_nsec = reinterpret_cast<uint64_t*>(const_cast<void*>(sens_data.fo.metadata));
+                                *ts_nsec /=1000;
+                            }
 
                             this->_callback(sens_data);
                         }
@@ -604,6 +583,7 @@ namespace librealsense
                 return;
 
             _is_capturing = false;
+            set_power(false);
             signal_stop();
             _hid_thread->join();
             _callback = NULL;
@@ -646,7 +626,7 @@ namespace librealsense
             create_channel_array();
 
             const uint32_t channel_size = get_channel_size();
-            auto raw_data_size = channel_size*buf_len;
+            auto raw_data_size = channel_size*hid_buf_len;
 
             std::vector<uint8_t> raw_data(raw_data_size);
 
@@ -671,6 +651,23 @@ namespace librealsense
             }
             iio_device_file << frequency;
             iio_device_file.close();
+        }
+
+        // Asynchronous power management
+        void iio_hid_sensor::set_power(bool on)
+        {
+            auto path = _iio_device_path + "/buffer/enable";
+
+            // Enqueue power management change
+            _pm_dispatcher.invoke([path,on](dispatcher::cancellable_timer t)
+            {
+                auto st = std::chrono::high_resolution_clock::now();
+
+                if (!write_fs_attribute(path, on))
+                {
+                    LOG_WARNING("HID set_power " << int(on) << " failed for " << path);
+                }
+            },true);
         }
 
         void iio_hid_sensor::signal_stop()
@@ -742,6 +739,27 @@ namespace librealsense
                 throw linux_backend_exception(to_string() << "IIO device number is incorrect! Failed to open device sensor. " << _iio_device_path);
             }
 
+            _pm_dispatcher.start();
+
+            // HID iio kernel driver async initialization may fail to map the kernel objects hierarchy (iio triggers) properly
+            // The patch will rectify this behaviour
+            std::string current_trigger = _sensor_name + "-dev" + _iio_device_path.back();
+            std::string path = _iio_device_path + "/trigger/current_trigger";
+            _pm_thread = std::unique_ptr<std::thread>(new std::thread([path,current_trigger](){
+                bool retry =true;
+                while (retry) {
+                    try {
+                        if (write_fs_attribute(path, current_trigger))
+                            break;
+                        else
+                            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    }
+                    catch(...){} // Device disconnect
+                    retry = false;
+                }
+            }));
+            _pm_thread->detach();
+
             // read all available input of the iio_device
             read_device_inputs();
 
@@ -752,8 +770,7 @@ namespace librealsense
                 input->enable(true);
 
             set_frequency(frequency);
-            write_integer_to_param("buffer/length", buf_len);
-            write_integer_to_param("buffer/enable", 1);
+            write_fs_attribute(_iio_device_path + "/buffer/length", hid_buf_len);
         }
 
         // calculate the storage size of a scan
@@ -867,24 +884,6 @@ namespace librealsense
                 }
             }
             closedir(dir);
-        }
-
-        // configure hid device via fd
-        void iio_hid_sensor::write_integer_to_param(const std::string& param,int value)
-        {
-            std::ostringstream device_path;
-            device_path << _iio_device_path << "/" << param;
-
-            std::ofstream iio_device_file(device_path.str());
-
-            if (!iio_device_file.good())
-            {
-                throw linux_backend_exception(to_string() << "write_integer_to_param failed! device path: " << _iio_device_path);
-            }
-
-            iio_device_file << value;
-
-            iio_device_file.close();
         }
 
         v4l_hid_device::v4l_hid_device(const hid_device_info& info)

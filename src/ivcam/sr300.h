@@ -22,6 +22,7 @@
 namespace librealsense
 {
     const uint16_t SR300_PID = 0x0aa5;
+    const uint16_t SR300v2_PID = 0x0B48;
 
     const double TIMESTAMP_10NSEC_TO_MSEC = 0.00001;
 
@@ -252,6 +253,12 @@ namespace librealsense
 
                 return results;
             }
+
+            processing_blocks get_recommended_processing_blocks() const override
+            {
+                return get_color_recommended_proccesing_blocks();
+            }
+
         private:
             const sr300_camera* _owner;
         };
@@ -320,6 +327,14 @@ namespace librealsense
                     recording_function(*this);
                 });
             }
+
+            static processing_blocks get_sr300_depth_recommended_proccesing_blocks();
+
+            processing_blocks get_recommended_processing_blocks() const override
+            {
+                return get_sr300_depth_recommended_proccesing_blocks();
+            };
+
         private:
             const sr300_camera* _owner;
         };

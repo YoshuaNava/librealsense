@@ -55,13 +55,20 @@ set(SDK_LIB_TYPE "STATIC")
 add_definitions(-DBUILD_STATIC)
 
 add_library(${PROJECT_NAME} ${SDK_LIB_TYPE} ${SOURCE_FILES})
-target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/../include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include> PRIVATE infra)
+target_include_directories(${PROJECT_NAME} 
+    PUBLIC 
+        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/../include> 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include> 
+    PRIVATE infra
+)
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     ${OS_SPECIFIC_LIBS}
     usb
     fw
 )
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Wno-unused-parameter -Wno-deprecated -Wno-cpp -Wno-pedantic)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION "${LIBVERSION}" SOVERSION "${LIBTM_VERSION_MAJOR}")
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER Library)

@@ -7,6 +7,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
 # include librealsense general configuration
 include(CMake/global_config.cmake)
 
+set(BUILD_CV_KINFU_EXAMPLE FALSE)
+set(BUILD_EXAMPLES FALSE)
+set(BUILD_GRAPHICAL_EXAMPLES FALSE)
+set(BUILD_NODEJS_BINDINGS FALSE)
+set(BUILD_PYTHON_BINDINGS FALSE)
+set(BUILD_UNIT_TESTS FALSE)
+set(BUILD_WITH_CUDA FALSE)
 
 config_cxx_flags()
 

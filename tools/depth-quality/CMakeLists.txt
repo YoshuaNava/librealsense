@@ -16,7 +16,7 @@ elseif(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
-    include_directories(${GTK3_INCLUDE_DIRS})
+    include_directories(SYSTEM ${GTK3_INCLUDE_DIRS})
     link_directories(${GTK3_LIBRARY_DIRS})
     add_definitions(${GTK3_CFLAGS_OTHER})
 
@@ -53,7 +53,7 @@ endif()
             ../../common/os.cpp
         )
 
-     include_directories(${LZ4_DIR})
+     include_directories(SYSTEM ${LZ4_DIR})
 
     if(WIN32)
         add_executable(rs-depth-quality WIN32 ${RS_QUALITY_TOOL_CPP}
@@ -84,7 +84,9 @@ endif()
             ../../common/model-views.cpp
             ../../common/windows-app-bootstrap.cpp)
 
-        include_directories(rs-depth-quality ../../common  ../../third-party
+        include_directories(rs-depth-quality ../../common  
+                                            SYSTEM
+                                             ../../third-party
                                              ../../third-party/imgui
                                              ../../third-party/glad
                                              ../../third-party/tclap/include
@@ -93,7 +95,9 @@ endif()
     else()
         add_executable(rs-depth-quality ${RS_QUALITY_TOOL_CPP})
 
-        include_directories(rs-depth-quality ../../common  ../../third-party
+        include_directories(rs-depth-quality ../../common
+                                            SYSTEM
+                                             ../../third-party
                                              ../../third-party/imgui
                                              ../../third-party/glad
                                              ../../third-party/tclap/include)

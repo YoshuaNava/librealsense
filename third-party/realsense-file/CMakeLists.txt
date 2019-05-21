@@ -32,11 +32,13 @@ add_library(${PROJECT_NAME} STATIC
     ${SOURCE_FILES_COMPRESSION}
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} 
+    SYSTEM PRIVATE
         ${ROSBAG_HEADER_DIRS}
         ${BOOST_INCLUDE_PATH}
         ${LZ4_INCLUDE_PATH}
-        )
+)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wno-unused-parameter -Wno-deprecated -Wno-cpp -Wno-pedantic)
 
 #set_target_properties(${PROJECT_NAME} PROPERTIES VERSION "${LIBVERSION}" SOVERSION "${LIBSOVERSION}")
 

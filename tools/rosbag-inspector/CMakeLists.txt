@@ -13,7 +13,7 @@ if(BUILD_GRAPHICAL_EXAMPLES)
         find_package(PkgConfig REQUIRED)
         pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
-        include_directories(${GTK3_INCLUDE_DIRS})
+        include_directories(SYSTEM ${GTK3_INCLUDE_DIRS})
         link_directories(${GTK3_LIBRARY_DIRS})
         add_definitions(${GTK3_CFLAGS_OTHER})
 
@@ -37,17 +37,29 @@ if(BUILD_GRAPHICAL_EXAMPLES)
     if(WIN32)
         add_executable(rs-rosbag-inspector WIN32 ${RS_ROSBAG_INSPECTOR_CPP})
 
-        include_directories(rs-rosbag-inspector ../../third-party/imgui ../../common ../../third-party ${CMAKE_CURRENT_SOURCE_DIR}/res/)
+        include_directories(rs-rosbag-inspector 
+            ../../common
+            SYSTEM
+                ../../third-party/imgui 
+                ../../third-party 
+                ${CMAKE_CURRENT_SOURCE_DIR}/res/
+        )
     else()
         add_executable(rs-rosbag-inspector ${RS_ROSBAG_INSPECTOR_CPP})
-        include_directories(rs-rosbag-inspector ../../third-party/imgui ../../common ../../third-party)
+        include_directories(rs-rosbag-inspector 
+            ../../common    
+            SYSTEM
+                ../../third-party/imgui
+                ../../third-party
+            )
     endif()
     set_property(TARGET rs-rosbag-inspector PROPERTY CXX_STANDARD 11)
 
-    target_include_directories(rs-rosbag-inspector PRIVATE
-        ${ROSBAG_HEADER_DIRS}
-        ${BOOST_INCLUDE_PATH}
-        ${LZ4_INCLUDE_PATH}
+    target_include_directories(rs-rosbag-inspector
+        SYSTEM PRIVATE
+            ${ROSBAG_HEADER_DIRS}
+            ${BOOST_INCLUDE_PATH}
+            ${LZ4_INCLUDE_PATH}
         )
 
     target_link_libraries(rs-rosbag-inspector realsense-file ${DEPENDENCIES} ${GTK3_LIBRARIES})

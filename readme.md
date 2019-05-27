@@ -4,6 +4,7 @@
 
 * Catkinized librealsense2.
 * Added a bash script for patching the UVC module of Ubuntu low latency kernels.
+* Removed dependency on `linux-headers-generic` from package.xml.
 
 For guidelines on how to build and use this package, check [additional instructions](doc/leggedrobotics/additional_instructions.md).
 

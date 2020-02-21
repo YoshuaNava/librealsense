@@ -1,6 +1,8 @@
 #  minimum required cmake version: 3.1.0
 cmake_minimum_required(VERSION 3.1.0)
-project(librealsense2 LANGUAGES CXX C)
+project(any_librealsense2 LANGUAGES CXX C)
+
+set(PROJECT_NAME librealsense2)
 
 include(CMake/lrs_options.cmake)
 include(CMake/connectivity_check.cmake)
@@ -106,6 +108,7 @@ endif()
 
 include(CMake/embedd_udev_rules.cmake)
 
+set(PROJECT_NAME any_librealsense2)
 catkin_package(
   INCLUDE_DIRS
     include
@@ -113,6 +116,7 @@ catkin_package(
     ${LRS_TARGET}
 )
 
+set(PROJECT_NAME librealsense2)
 install(
   DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

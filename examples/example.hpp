@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 
 #define GL_SILENCE_DEPRECATION
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
 
-#include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
+#include <any_librealsense2/rs.hpp> // Include RealSense Cross Platform API
 
 #include <string>
 #include <sstream>

@@ -22,6 +22,7 @@
   <author email="mark.d.horn@intel.com">Mark Horn</author>
   <author email="reagan.lopez@intel.com">Reagan Lopez</author>
   <author email="itay.carpis@intel.com">Itay Carpis</author>
+  <author email="ynava@anybotics.com">Yoshua Nava</author>
 
   <license>Apache License, Version 2.0</license>
 
@@ -37,7 +38,7 @@
   <depend>opengl</depend>
   <depend>gtk3</depend>
 
-  <export>
+  <!-- <export>
     <build_type>cmake</build_type>
-  </export>
+  </export> -->
 </package>

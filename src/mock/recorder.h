@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../../include/librealsense2/h/rs_internal.h"
+#include "../../include/any_librealsense2/h/rs_internal.h"
 #include "backend.h"
 #include "context.h"
 #include "command_transfer.h"

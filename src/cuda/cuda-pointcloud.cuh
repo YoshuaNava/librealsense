@@ -6,9 +6,9 @@
 
 // Types
 #include <stdint.h>
-#include "../../include/librealsense2/rs.h"
+#include "../../include/any_librealsense2/rs.h"
 #include "assert.h"
-#include "../../include/librealsense2/rsutil.h"
+#include "../../include/any_librealsense2/rsutil.h"
 #include <functional>
 
 // CUDA headers

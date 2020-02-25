@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#include "librealsense2/rs.h"
+#include "any_librealsense2/rs.h"
 
 /*
 * GL-specific extension types.

@@ -14,8 +14,8 @@ set(REALSENSE_GL_CPP
     pointcloud-gl.cpp
     rs-gl.cpp
     realsense-gl.def
-    ../../include/librealsense2-gl/rs_processing_gl.h
-    ../../include/librealsense2-gl/rs_processing_gl.hpp
+    ../../include/any_librealsense2-gl/rs_processing_gl.h
+    ../../include/any_librealsense2-gl/rs_processing_gl.hpp
     ../../third-party/glad/glad.c
     ../../common/opengl3.cpp
     ../../common/opengl3.h
@@ -43,8 +43,8 @@ source_group("3rd Party" FILES
     ../../third-party/glad/glad.c)
 
 source_group("API" FILES
-    ../../include/librealsense2-gl/rs_processing_gl.h
-    ../../include/librealsense2-gl/rs_processing_gl.hpp
+    ../../include/any_librealsense2-gl/rs_processing_gl.h
+    ../../include/any_librealsense2-gl/rs_processing_gl.hpp
     realsense-gl.def)
 
 add_library(${LRS_GL_TARGET} ${REALSENSE_GL_CPP})

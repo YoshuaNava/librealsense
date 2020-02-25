@@ -1,7 +1,7 @@
 #include "MatlabParamParser.h"
 #include "Factory.h"
-#include "librealsense2/rs.hpp"
-#include "librealsense2/hpp/rs_export.hpp"
+#include "any_librealsense2/rs.hpp"
+#include "any_librealsense2/hpp/rs_export.hpp"
 
 #pragma comment(lib, "libmx.lib")
 #pragma comment(lib, "libmex.lib")

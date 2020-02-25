@@ -2,8 +2,6 @@
 cmake_minimum_required(VERSION 3.1.0)
 project(any_librealsense2 LANGUAGES CXX C)
 
-set(PROJECT_NAME librealsense2)
-
 include(CMake/lrs_options.cmake)
 include(CMake/connectivity_check.cmake)
 
@@ -53,6 +51,13 @@ os_set_flags()
 global_set_flags()
 
 find_package(catkin REQUIRED)
+
+catkin_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    ${LRS_TARGET}
+)
 
 if(BUILD_SHARED_LIBS)
     add_library(${LRS_TARGET} SHARED "")
@@ -108,15 +113,6 @@ endif()
 
 include(CMake/embedd_udev_rules.cmake)
 
-set(PROJECT_NAME any_librealsense2)
-catkin_package(
-  INCLUDE_DIRS
-    include
-  LIBRARIES
-    ${LRS_TARGET}
-)
-
-set(PROJECT_NAME librealsense2)
 install(
   DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

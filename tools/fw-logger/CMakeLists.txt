@@ -35,6 +35,6 @@ install(
     rs-fw-logger
 
     RUNTIME DESTINATION
-    ${CMAKE_INSTALL_BINDIR}
+    ${CMAKE_INSTALL_BINDIR}/any_librealsense2/
 )
 

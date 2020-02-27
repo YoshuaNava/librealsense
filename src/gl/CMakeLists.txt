@@ -87,24 +87,24 @@ target_link_libraries(${PROJECT_NAME}
 # Hence these targets will be invoked from the project and not the root directory
 install(TARGETS ${LRS_GL_TARGET}
     EXPORT realsense2-glTargets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/any_librealsense2/
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/any_librealsense2/
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/any_librealsense2/
     PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_PREFIX}/include/librealsense2"
 )
 
 install(EXPORT realsense2-glTargets
     FILE realsense2-glTargets.cmake
     NAMESPACE ${LRS_GL_TARGET}::
-    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR}/any_librealsense2/
 )
 
 install(FILES "${CMAKE_BINARY_DIR}/src/gl/realsense2-glConfig.cmake"
-    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR}/any_librealsense2/
 )
 
 install(FILES "${CMAKE_BINARY_DIR}/src/gl/realsense2-glConfigVersion.cmake"
-        DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+        DESTINATION ${CMAKECONFIG_INSTALL_DIR}/any_librealsense2/
 )
 
 # Set library pkgconfig file for facilitating 3rd party integration

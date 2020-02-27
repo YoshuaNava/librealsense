@@ -32,6 +32,6 @@ if(BUILD_GRAPHICAL_EXAMPLES)
         rs-benchmark
 
         RUNTIME DESTINATION
-        ${CMAKE_INSTALL_BINDIR}
+        ${CMAKE_INSTALL_BINDIR}/any_librealsense2/
     )
 endif()

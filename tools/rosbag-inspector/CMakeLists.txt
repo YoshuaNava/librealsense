@@ -54,6 +54,6 @@ if(BUILD_GRAPHICAL_EXAMPLES)
         rs-rosbag-inspector
 
         RUNTIME DESTINATION
-        ${CMAKE_INSTALL_BINDIR}
+        ${CMAKE_INSTALL_BINDIR}/any_librealsense2/
     )
 endif()

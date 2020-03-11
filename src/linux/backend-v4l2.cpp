@@ -1559,7 +1559,7 @@ namespace librealsense
                 }
                 else
                 {
-                    LOG_WARNING("Metadata frame arrived in idle mode.");
+                    LOG_DEBUG("Metadata frame arrived in idle mode.");
                 }
             }
         }

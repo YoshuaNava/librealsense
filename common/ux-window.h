@@ -1,17 +1,21 @@
 #pragma once
 
 #define GLFW_INCLUDE_GLU
-
 #include <GLFW/glfw3.h>
+
 #include "imgui.h"
 #include <string>
 #include <functional>
 #include <thread>
 #include "rendering.h"
 #include <atomic>
+#include <memory>
 
 namespace rs2
 {
+    class visualizer_2d;
+    class context;
+
     class viewer_ui_traits
     {
     public:
@@ -30,8 +34,9 @@ namespace rs2
     public:
         std::function<void(std::string)> on_file_drop = [](std::string) {};
         std::function<bool()>            on_load = []() { return false; };
+        std::function<void()>            on_reload_complete = []() { };
 
-        ux_window(const char* title);
+        ux_window(const char* title, context &ctx);
 
         float width() const { return float(_width); }
         float height() const { return float(_height); }
@@ -44,7 +49,7 @@ namespace rs2
 
         ~ux_window();
 
-        operator GLFWwindow*() { return _win; }
+        operator GLFWwindow*() const { return _win; }
 
         void begin_frame();
 
@@ -62,18 +67,34 @@ namespace rs2
 
         void add_on_load_message(const std::string& msg);
 
-		bool is_ui_aligned() { return _is_ui_aligned; }
+        bool is_ui_aligned() { return _is_ui_aligned; }
+        bool is_fullscreen() { return _fullscreen; }
 
+        texture_buffer& get_splash() { return _splash_tex; }
+
+        void reload();
+        void refresh();
+
+        void link_hovered();
+        void cross_hovered();
+
+        double time() const { return glfwGetTime(); }
     private:
         void open_window();
 
+        void setup_icon();
+
+        void imgui_config_push();
+        void imgui_config_pop();
+
         GLFWwindow               *_win;
         int                      _width, _height, _output_height;
-        int                     _fb_width, _fb_height;
+        int                     _fb_width = 0;
+        int                     _fb_height = 0;
         rs2::rect                _viewer_rect;
 
         ImFont                   *_font_14, *_font_18;
-        rs2::mouse_info          _mouse;
+        rs2::mouse_info          _mouse{};
         std::string              _error_message;
         float                    _scale_factor;
 
@@ -93,7 +114,22 @@ namespace rs2
         std::string              _dev_stat_message;
         bool                     _fullscreen_pressed = false;
         bool                     _fullscreen = false;
+        bool                     _reload = false;
+        bool                     _show_fps = false;
+        bool                     _vsync = true;
+        bool                     _use_glsl_proc = false;
+        bool                     _use_glsl_render = false;
+        bool                     _enable_msaa = false;
+        int                      _msaa_samples = 0;
+
+        bool                     _link_hovered = false;
+        GLFWcursor*              _hand_cursor = nullptr;
+        bool                     _cross_hovered = false;
+        GLFWcursor*              _cross_cursor = nullptr;
+
         std::string              _title;
+        std::shared_ptr<visualizer_2d> _2d_vis;
+        context                  &_ctx;
 
         bool                     _is_ui_aligned = false;
     };

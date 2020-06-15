@@ -12,14 +12,14 @@
 using namespace librealsense;
 
 playback_device::playback_device(std::shared_ptr<context> ctx, std::shared_ptr<device_serializer::reader> serializer) :
+    m_read_thread([]() {return std::make_shared<dispatcher>(std::numeric_limits<unsigned int>::max()); }),
     m_context(ctx),
     m_is_started(false),
     m_is_paused(false),
     m_sample_rate(1),
     m_real_time(true),
     m_prev_timestamp(0),
-    m_last_published_timestamp(0),
-    m_read_thread([]() {return std::make_shared<dispatcher>(std::numeric_limits<unsigned int>::max()); })
+    m_last_published_timestamp(0)
 {
     if (serializer == nullptr)
     {
@@ -138,8 +138,8 @@ std::shared_ptr<stream_profile_interface> playback_device::get_stream(const std:
 
 rs2_extrinsics playback_device::calc_extrinsic(const rs2_extrinsics& from, const rs2_extrinsics& to)
 {
-    //NOTE: Assuming here that recording is writing extrinsics **from** some reference point **to** the stream at hand
-    return from_pose(inverse(to_pose(from)) * to_pose(to));
+    //NOTE: Assuming here that recording is writing extrinsics **from** the stream at hand **to** some reference point
+    return from_pose(to_pose(to) * inverse(to_pose(from)));
 }
 
 playback_device::~playback_device()
@@ -339,7 +339,7 @@ void playback_device::resume()
 
 void playback_device::set_real_time(bool real_time)
 {
-    LOG_INFO("Set real time to " << (real_time) ? "True" : "False");
+    LOG_INFO("Set real time to " << ((real_time) ? "True" : "False"));
     m_real_time = real_time;
 }
 
@@ -370,7 +370,7 @@ void playback_device::update_time_base(device_serializer::nanoseconds base_times
     LOG_DEBUG("Updating Time Base... m_base_sys_time " << m_base_sys_time.time_since_epoch().count() << " m_base_timestamp " << m_base_timestamp.count());
 }
 
-device_serializer::nanoseconds playback_device::calc_sleep_time(device_serializer::nanoseconds timestamp) const
+device_serializer::nanoseconds playback_device::calc_sleep_time(device_serializer::nanoseconds timestamp)
 {
     if (!m_real_time)
         return device_serializer::nanoseconds(0);
@@ -378,9 +378,13 @@ device_serializer::nanoseconds playback_device::calc_sleep_time(device_serialize
     // and the playback time.
     auto now = std::chrono::high_resolution_clock::now();
     auto play_time = now - m_base_sys_time;
+
+    //Sometimes the first stream skip the first frame on the ros reader
+    //and the second stream go back to the first frame so its timestamp is smaller then the base timestamp
+    //in this case we need to restart the m_base_timestamp again
     if(timestamp < m_base_timestamp)
     {
-        assert(0);
+        update_time_base(timestamp);
     }
     auto time_diff = timestamp - m_base_timestamp;
     auto recorded_time = std::chrono::duration_cast<device_serializer::nanoseconds>(time_diff / m_sample_rate.load());
@@ -692,7 +696,11 @@ bool playback_device::try_extend_snapshot(std::shared_ptr<extension_snapshot>& e
     case RS2_EXTENSION_VIDEO:   return try_extend<video_sensor_interface>(e, ext);
     case RS2_EXTENSION_ROI:     return try_extend<roi_sensor_interface>(e, ext);
     case RS2_EXTENSION_DEPTH_SENSOR: return try_extend<depth_sensor>(e, ext);
+    case RS2_EXTENSION_L500_DEPTH_SENSOR: return try_extend<l500_depth_sensor_interface>(e, ext);
     case RS2_EXTENSION_DEPTH_STEREO_SENSOR: return try_extend<depth_stereo_sensor>(e, ext);
+    case RS2_EXTENSION_COLOR_SENSOR: return try_extend<color_sensor>(e, ext);
+    case RS2_EXTENSION_MOTION_SENSOR: return try_extend<motion_sensor>(e, ext);
+    case RS2_EXTENSION_FISHEYE_SENSOR: return try_extend<fisheye_sensor>(e, ext);
     case RS2_EXTENSION_UNKNOWN: //[[fallthrough]]
     case RS2_EXTENSION_COUNT:   //[[fallthrough]]
     default:

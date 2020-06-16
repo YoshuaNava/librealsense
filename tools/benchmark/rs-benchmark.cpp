@@ -4,7 +4,7 @@
 #include <any_librealsense2/rs.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <any_librealsense2nse2-gl/rs_processing_gl.hpp>
+#include <any_librealsense2-gl/rs_processing_gl.hpp>
 
 #include <iostream>
 #include <iomanip>

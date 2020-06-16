@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 # View the makefile commands during build
 #set(CMAKE_VERBOSE_MAKEFILE on)
 
-set(DEPENDENCIES ${DEPENDENCIES} realsense2)
+set(DEPENDENCIES ${DEPENDENCIES} any_realsense2)
 
 add_subdirectory(convert)
 add_subdirectory(enumerate-devices)

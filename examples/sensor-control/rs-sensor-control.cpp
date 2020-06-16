@@ -6,7 +6,7 @@
 #include <map>
 #include <utility>
 #include <vector>
-#include <any_librealsense2nse2nse2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 #include <algorithm>
 #include "../example.hpp"
 #include "api_how_to.h"

@@ -3,7 +3,7 @@
 
 #include <any_librealsense2/rs.hpp> // Include RealSense Cross Platform API
 #include "example.hpp"          // Include short list of convenience functions for rendering
-#include <any_librealsense2nse2-gl/rs_processing_gl.hpp> // Include GPU-Processing API
+#include <any_librealsense2-gl/rs_processing_gl.hpp> // Include GPU-Processing API
 
 // Helper functions
 void register_glfw_callbacks(window& app, glfw_state& app_state);

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 
 #define GL_SILENCE_DEPRECATION
 #define GLFW_INCLUDE_GLU

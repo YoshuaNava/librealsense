@@ -19,7 +19,12 @@ add_executable(${RS_TARGET} rs-convert.cpp
 )
 set_property(TARGET ${RS_TARGET} PROPERTY CXX_STANDARD 11)
 target_link_libraries(${RS_TARGET} ${DEPENDENCIES} Threads::Threads)
-include_directories(${RS_TARGET} ../../common ../../third-party ../../third-party/tclap/include)
+include_directories(${RS_TARGET} 
+    ../../common 
+    SYSTEM
+        ../../third-party 
+        ../../third-party/tclap/include
+)
 
 set_target_properties (${RS_TARGET} PROPERTIES
     FOLDER "Tools"
@@ -29,5 +34,5 @@ install(
     TARGETS
     ${RS_TARGET}
     RUNTIME DESTINATION
-    ${CMAKE_INSTALL_BINDIR}
+    ${CMAKE_INSTALL_BINDIR}/any_librealsense2/
 )

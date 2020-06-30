@@ -138,6 +138,39 @@ public class GLRenderer implements GLSurfaceView.Renderer, AutoCloseable{
     public void upload(Frame f) {
         if(f == null)
             return;
+        if(mHasColorRbg8)
+            mPointsTexture = frameSet.first(StreamType.COLOR, StreamFormat.RGB8);
+        else{
+            try (Frame d = frameSet.first(StreamType.DEPTH, StreamFormat.Z16)) {
+                if(d != null)
+                    mPointsTexture = mColorizer.process(d);
+            }
+        }
+    }
+
+        try(StreamProfile sp = f.getProfile()){
+            if(!isFormatSupported(sp.getFormat()))
+                return;
+
+            addFrame(f);
+            int uid = sp.getUniqueId();
+
+            GLFrame curr = mFrames.get(uid);
+            if(curr == null)
+                return;
+            curr.setFrame(f);
+
+            if(mPointsTexture != null && curr instanceof GLPointsFrame){
+                ((GLPointsFrame) curr).setTextureFrame(mPointsTexture);
+                mPointsTexture.close();
+                mPointsTexture = null;
+            }
+        }
+    }
+
+    public void upload(Frame f) {
+        if(f == null)
+            return;
 
         try(StreamProfile sp = f.getProfile()){
             if(!isFormatSupported(sp.getFormat()))

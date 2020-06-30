@@ -142,6 +142,7 @@ public class DetachedActivity extends AppCompatActivity {
         } catch (Exception e){
             Log.e(TAG, "error while validating device, error: " + e.getMessage());
         }
+        return true;
     }
 
     private boolean validateFwVersion(Device device){

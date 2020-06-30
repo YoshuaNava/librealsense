@@ -1,3 +1,15 @@
+# NOTE: This is a fork from the official repository
+
+**The following changes have been applied on top of Intel's main development branch:**
+
+* Catkinized librealsense2.
+* Added a bash script for patching the UVC module of Ubuntu low latency kernels.
+* Removed dependency on `linux-headers-generic` from package.xml.
+
+For guidelines on how to build and use this package, check [additional instructions](doc/leggedrobotics/additional_instructions.md).
+
+-----------------
+
 <p align="center"><img src="doc/img/realsense.png" width="70%" /><br><br></p>
 
 -----------------

@@ -35,10 +35,11 @@ if(BUILD_GRAPHICAL_EXAMPLES)
     endif()
     set_property(TARGET rs-rosbag-inspector PROPERTY CXX_STANDARD 11)
 
-    target_include_directories(rs-rosbag-inspector PRIVATE
-        ${ROSBAG_HEADER_DIRS}
-        ${BOOST_INCLUDE_PATH}
-        ${LZ4_INCLUDE_PATH}
+    target_include_directories(rs-rosbag-inspector
+        SYSTEM PRIVATE
+            ${ROSBAG_HEADER_DIRS}
+            ${BOOST_INCLUDE_PATH}
+            ${LZ4_INCLUDE_PATH}
         )
 
     target_link_libraries(rs-rosbag-inspector realsense-file ${DEPENDENCIES})
@@ -53,6 +54,6 @@ if(BUILD_GRAPHICAL_EXAMPLES)
         rs-rosbag-inspector
 
         RUNTIME DESTINATION
-        ${CMAKE_INSTALL_BINDIR}
+        ${CMAKE_INSTALL_BINDIR}/any_librealsense2/
     )
 endif()

@@ -140,6 +140,61 @@ public class PreviewActivity extends AppCompatActivity {
         m3dButton.setTextColor(mShow3D ? Color.YELLOW : Color.WHITE);
     }
 
+    private synchronized Map<Integer, TextView> createLabels(Map<Integer, Pair<String, Rect>> rects){
+        if(rects == null)
+            return null;
+        mLabels = new HashMap<>();
+
+        final RelativeLayout rl = findViewById(R.id.labels_layout);
+        for(Map.Entry<Integer, Pair<String, Rect>> e : rects.entrySet()){
+            TextView tv = new TextView(getApplicationContext());
+            ViewGroup.LayoutParams lp = new RelativeLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            tv.setLayoutParams(lp);
+            tv.setTextColor(Color.parseColor("#ffffff"));
+            tv.setTextSize(14);
+            rl.addView(tv);
+            mLabels.put(e.getKey(), tv);
+        }
+        return mLabels;
+    }
+
+    private void printLables(final Map<Integer, Pair<String, Rect>> rects){
+        if(rects == null)
+            return;
+        final Map<Integer, String> lables = new HashMap<>();
+        if(mLabels == null)
+            mLabels = createLabels(rects);
+        for(Map.Entry<Integer, Pair<String, Rect>> e : rects.entrySet()){
+            lables.put(e.getKey(), e.getValue().first);
+        }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for(Map.Entry<Integer,TextView> e : mLabels.entrySet()){
+                    Integer uid = e.getKey();
+                    if(rects.get(uid) == null)
+                        continue;
+                    Rect r = rects.get(uid).second;
+                    TextView tv = e.getValue();
+                    tv.setX(r.left);
+                    tv.setY(r.top);
+                    tv.setText(lables.get(uid));
+                }
+            }
+        });
+    }
+
+    private void clearLables(){
+        if(mLabels != null){
+            for(Map.Entry<Integer, TextView> label : mLabels.entrySet())
+                label.getValue().setVisibility(View.GONE);
+            mLabels = null;
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();

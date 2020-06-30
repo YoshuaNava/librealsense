@@ -5,7 +5,10 @@ if (NOT TARGET usb)
     find_package_handle_standard_args(usb "libusb not found; using internal version" LIBUSB_LIB LIBUSB_INC)
     if (USB_FOUND AND NOT USE_EXTERNAL_USB)
         add_library(usb INTERFACE)
-        target_include_directories(usb INTERFACE ${LIBUSB_INC})
+        target_include_directories(usb 
+            SYSTEM INTERFACE 
+                ${LIBUSB_INC}
+        )
         target_link_libraries(usb INTERFACE ${LIBUSB_LIB})
     else()
         include(CMake/external_libusb.cmake)

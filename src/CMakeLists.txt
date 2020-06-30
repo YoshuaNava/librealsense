@@ -23,6 +23,11 @@ if(WIN32)
     include(${_rel_path}/win/CMakeLists.txt)
     include(${_rel_path}/winusb/CMakeLists.txt)
 endif()
+    
+if(WIN32)
+    include(${_rel_path}/win/CMakeLists.txt)
+    include(${_rel_path}/winusb/CMakeLists.txt)    
+endif()
 
 if(${BACKEND} STREQUAL RS2_USE_ANDROID_BACKEND)
     include(${_rel_path}/usbhost/CMakeLists.txt)

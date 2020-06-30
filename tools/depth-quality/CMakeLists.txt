@@ -64,7 +64,9 @@ if(BUILD_GRAPHICAL_EXAMPLES)
             depth-metrics.h
             ${COMMON_SRC})
 
-        include_directories(rs-depth-quality ../../common  ../../third-party
+        include_directories(rs-depth-quality ../../common  
+                                            SYSTEM
+                                             ../../third-party
                                              ../../third-party/imgui
                                              ../../third-party/glad
                                              ../../third-party/tclap/include
@@ -77,7 +79,9 @@ if(BUILD_GRAPHICAL_EXAMPLES)
         ${ELPP_FILES}
         )
 
-        include_directories(rs-depth-quality ../../common  ../../third-party
+        include_directories(rs-depth-quality ../../common
+                                            SYSTEM
+                                             ../../third-party
                                              ../../third-party/imgui
                                              ../../third-party/glad
                                              ../../third-party/tinyfiledialogs

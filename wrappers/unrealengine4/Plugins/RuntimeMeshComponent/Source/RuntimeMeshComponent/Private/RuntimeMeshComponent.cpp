@@ -15,6 +15,11 @@
 #include "RuntimeMeshLegacySerialization.h"
 #include "NavigationSystem.h"
 
+#if ENGINE_MAJOR_VERSION >= 4 && ENGINE_MINOR_VERSION >= 20
+#include "NavigationSystem.h"
+#else
+#include "AI/Navigation/NavigationSystem.h"
+#endif
 
 
 DECLARE_CYCLE_STAT(TEXT("RMC - New Collision Data Recieved"), STAT_RuntimeMeshComponent_NewCollisionMeshReceived, STATGROUP_RuntimeMesh);

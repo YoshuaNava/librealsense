@@ -1,6 +1,6 @@
 #  minimum required cmake version: 3.1.0
 cmake_minimum_required(VERSION 3.1.0)
-project(librealsense2 LANGUAGES CXX C)
+project(any_librealsense2 LANGUAGES CXX C)
 
 include(CMake/lrs_options.cmake)
 include(CMake/connectivity_check.cmake)
@@ -28,6 +28,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
 # include librealsense general configuration
 include(CMake/global_config.cmake)
 
+set(BUILD_CV_KINFU_EXAMPLE FALSE)
+set(BUILD_EXAMPLES FALSE)
+set(BUILD_GRAPHICAL_EXAMPLES FALSE)
+set(BUILD_NODEJS_BINDINGS FALSE)
+set(BUILD_PYTHON_BINDINGS FALSE)
+set(BUILD_UNIT_TESTS FALSE)
+set(BUILD_WITH_CUDA FALSE)
 
 config_cxx_flags()
 
@@ -42,6 +49,15 @@ os_set_flags()
 # set global configuration flags
 # macro definition located at "CMake/global_config.cmake"
 global_set_flags()
+
+find_package(catkin REQUIRED)
+
+catkin_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    ${LRS_TARGET}
+)
 
 if(BUILD_SHARED_LIBS)
     add_library(${LRS_TARGET} SHARED "")

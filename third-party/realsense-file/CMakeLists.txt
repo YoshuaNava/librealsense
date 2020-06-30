@@ -32,11 +32,13 @@ add_library(${PROJECT_NAME} STATIC
     ${SOURCE_FILES_COMPRESSION}
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} 
+    SYSTEM PRIVATE
         ${ROSBAG_HEADER_DIRS}
         ${BOOST_INCLUDE_PATH}
         ${LZ4_INCLUDE_PATH}
-        )
+)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wno-unused-parameter -Wno-deprecated -Wno-cpp -Wno-pedantic)
 
 #set_target_properties(${PROJECT_NAME} PROPERTIES VERSION "${LIBVERSION}" SOVERSION "${LIBSOVERSION}")
 
@@ -46,7 +48,7 @@ set(CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/../cmake/realsense2")
 
 install(TARGETS ${PROJECT_NAME}
     EXPORT realsense2Targets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/any_librealsense2/
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/any_librealsense2/
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/any_librealsense2/
 )

@@ -37,6 +37,7 @@ function require_package {
 #	master	UBUNTU: Ubuntu-4.15.0-74.84	Khalid Elmously	5 weeks
 #	master-current	UBUNTU: Ubuntu-4.15.0-66.75	Khalid Elmously	4 months
 
+
 function choose_kernel_branch {
 
 	# Split the kernel version string

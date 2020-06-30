@@ -92,7 +92,7 @@ endif()
 
 install(TARGETS ${PROJECT_NAME}
     EXPORT realsense2Targets
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION lib/any_librealsense2/
+    LIBRARY DESTINATION lib/any_librealsense2/
+    RUNTIME DESTINATION bin/any_librealsense2/
     )

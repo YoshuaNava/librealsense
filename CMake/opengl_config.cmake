@@ -1,2 +1,2 @@
 find_package(OpenGL REQUIRED)
-set(DEPENDENCIES realsense2 glfw ${OPENGL_LIBRARIES})
+set(DEPENDENCIES any_realsense2 glfw ${OPENGL_LIBRARIES})

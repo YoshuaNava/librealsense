@@ -3,7 +3,7 @@
 
 #include <jni.h>
 #include "error.h"
-#include "../../../include/librealsense2/rs.h"
+#include "../../../include/any_librealsense2/rs.h"
 
 #include "../../../include/librealsense2/hpp/rs_context.hpp"
 

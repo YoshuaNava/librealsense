@@ -4,7 +4,7 @@
 #pragma once
 #include <string>
 #include <chrono>
-#include "librealsense2/rs.h"
+#include "any_librealsense2/rs.h"
 #include "sensor_msgs/image_encodings.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/Image.h"

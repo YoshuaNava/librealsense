@@ -18,7 +18,7 @@ if(ENABLE_CCACHE)
 endif()
 
 macro(global_set_flags)
-    set(LRS_TARGET realsense2)
+    set(LRS_TARGET any_realsense2)
     set(LRS_LIB_NAME ${LRS_TARGET})
 
     add_definitions(-DELPP_THREAD_SAFE)
@@ -90,15 +90,15 @@ macro(global_target_config)
     set_target_properties (${LRS_TARGET} PROPERTIES FOLDER Library)
 
     target_include_directories(${LRS_TARGET}
-        PRIVATE
+        SYSTEM PRIVATE
             ${ROSBAG_HEADER_DIRS}
             ${BOOST_INCLUDE_PATH}
             ${LZ4_INCLUDE_PATH}
             ${LIBUSB_LOCAL_INCLUDE_PATH}
+            ${USB_INCLUDE_DIRS}
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
-            PRIVATE ${USB_INCLUDE_DIRS}
     )
 
 

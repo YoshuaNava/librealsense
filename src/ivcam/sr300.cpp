@@ -485,6 +485,13 @@ namespace librealsense
             return (c.Rmax / 1000 / 0xFFFF);
         })));
 
+        if (firmware_version(fw_version) >= firmware_version("3.26.2.0"))
+        {
+            roi_sensor_interface* roi_sensor;
+            if ((roi_sensor = dynamic_cast<roi_sensor_interface*>(&get_sensor(_color_device_idx))))
+                roi_sensor->set_roi_method(std::make_shared<ds5_auto_exposure_roi_method>(*_hw_monitor,
+                (ds::fw_cmd)ivcam::fw_cmd::SetRgbAeRoi));
+        }
     }
 
     sr305_camera::sr305_camera(std::shared_ptr<context> ctx, const platform::uvc_device_info &color,

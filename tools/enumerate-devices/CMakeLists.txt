@@ -8,7 +8,10 @@ project(RealsenseExamplesEnumerateDevices)
 add_executable(rs-enumerate-devices rs-enumerate-devices.cpp)
 set_property(TARGET rs-enumerate-devices PROPERTY CXX_STANDARD 11)
 target_link_libraries(rs-enumerate-devices ${DEPENDENCIES})
-include_directories(rs-enumerate-devices ../../third-party/tclap/include)
+include_directories(rs-enumerate-devices 
+    SYSTEM 
+        ../../third-party/tclap/include
+)
 set_target_properties (rs-enumerate-devices PROPERTIES
     FOLDER Tools
 )
@@ -19,5 +22,5 @@ install(
     rs-enumerate-devices
 
     RUNTIME DESTINATION
-    ${CMAKE_INSTALL_BINDIR}
+    ${CMAKE_INSTALL_BINDIR}/any_librealsense2/
 )

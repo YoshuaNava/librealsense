@@ -66,4 +66,5 @@ classdef frame_queue < handle
             cap = realsense.librealsense_mex('rs2::frame_queue', 'keep_frames', this.objectHandle);
         end
     end
+    end
 end

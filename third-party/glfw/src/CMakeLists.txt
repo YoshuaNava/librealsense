@@ -155,7 +155,8 @@ if (GLFW_INSTALL)
     install(TARGETS glfw
             EXPORT glfwTargets
             RUNTIME DESTINATION "bin"
-            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/any_librealsense2/
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/any_librealsense2/
+    )
 endif()
 

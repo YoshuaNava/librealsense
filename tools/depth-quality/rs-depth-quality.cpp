@@ -2,7 +2,7 @@
 // Copyright(c) 2015 Intel Corporation. All Rights Reserved.
 
 #include <numeric>
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 #include "depth-quality-model.h"
 #include "easylogging++.h"
 

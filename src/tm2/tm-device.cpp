@@ -704,6 +704,8 @@ namespace librealsense
 
         _is_opened = false;
         set_active_streams({});
+
+        manual_exposure = 0;
     }
 
     void tm2_sensor::pass_frames_to_fw(frame_holder fref)
@@ -1906,6 +1908,40 @@ namespace librealsense
         _device->bulk_request_response(request, response);
 
         manual_exposure = manual;
+    }
+
+    void tm2_sensor::set_exposure(float value)
+    {
+        if (!manual_exposure)
+            throw std::runtime_error("To control exposure you must set sensor to manual exposure mode prior to streaming");
+        SetManualExposure(_tm_dev, value, last_gain);
+        last_exposure = value;
+    }
+
+
+
+    float tm2_sensor::get_exposure() const
+    {
+        return last_exposure;
+    }
+
+    void tm2_sensor::set_gain(float value)
+    {
+        if (!manual_exposure)
+            throw std::runtime_error("To control gain you must set sensor to manual exposure mode prior to streaming");
+        SetManualExposure(_tm_dev, last_exposure, value);
+        last_gain = value;
+    }
+
+    float tm2_sensor::get_gain() const
+    {
+        return last_gain;
+    }
+
+    void tm2_sensor::set_manual_exposure(bool manual)
+    {
+        SetExposureMode(_tm_dev, manual);
+        manual_exposure = true;
     }
 
     ///////////////

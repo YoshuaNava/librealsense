@@ -414,6 +414,8 @@ namespace librealsense
             _target_profile_depth = _source_profile_depth.clone(_source_profile_depth.stream_type(), _source_profile_depth.stream_index(), _source_profile_depth.format());
         }
 
+        }
+
         auto depth_frame = data.get_depth_frame();
         auto ir_frame = data.get_infrared_frame();
         auto confidence_frame = data.first_or_default(RS2_STREAM_CONFIDENCE);

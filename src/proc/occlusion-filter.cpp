@@ -1,8 +1,8 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2018 Intel Corporation. All Rights Reserved.
 
-#include "../include/librealsense2/rs.hpp"
-#include "../include/librealsense2/rsutil.h"
+#include "../include/any_librealsense2/rs.hpp"
+#include "../include/any_librealsense2/rsutil.h"
 #include "proc/synthetic-stream.h"
 #include "proc/occlusion-filter.h"
 //#include  "../../common/tiny-profiler.h"

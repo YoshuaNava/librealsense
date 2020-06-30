@@ -11,7 +11,7 @@
 #include <compression/CompressionFactory.h>
 #include <ipDeviceCommon/MemoryPool.h>
 
-#include <librealsense2/hpp/rs_internal.hpp>
+#include <any_librealsense2/hpp/rs_internal.hpp>
 
 class RsSink : public MediaSink
 {

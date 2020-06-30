@@ -4,7 +4,7 @@
 #ifndef LIBREALSENSE_RS2_NET_HPP
 #define LIBREALSENSE_RS2_NET_HPP
 
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 #include "rs_net.h"
 
 #include <memory>

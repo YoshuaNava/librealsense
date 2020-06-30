@@ -45,7 +45,7 @@ public class RealSense : ModuleRules
 		{
 			string RealSenseDirectory = "/usr/local/";
 			PublicIncludePaths.Add(Path.Combine(RealSenseDirectory, "include"));
-			PublicAdditionalLibraries.Add(Path.Combine(RealSenseDirectory, "lib64/librealsense2.so"));
+			PublicAdditionalLibraries.Add(Path.Combine(RealSenseDirectory, "lib64/any_librealsense2.so"));
 		}
 		else
 		if (Target.Platform == UnrealTargetPlatform.Win64)

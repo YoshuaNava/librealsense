@@ -5,7 +5,7 @@
 #include <ipDeviceCommon/Statistic.h>
 
 #include "api.h"
-#include <librealsense2-net/rs_net.h>
+#include <any_librealsense2-net/rs_net.h>
 
 #include <chrono>
 #include <list>

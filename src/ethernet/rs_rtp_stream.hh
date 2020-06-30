@@ -7,7 +7,7 @@
 #include "RsSink.h"
 
 #include "software-device.h"
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 
 #include <NetdevLog.h>
 

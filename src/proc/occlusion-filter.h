@@ -2,7 +2,7 @@
 // Copyright(c) 2018 Intel Corporation. All Rights Reserved.
 
 #pragma once
-#include "../include/librealsense2/hpp/rs_frame.hpp"
+#include "../include/any_librealsense2/hpp/rs_frame.hpp"
 #include "proc/rotation-transform.h"
 
 #define ROTATION_BUFFER_SIZE 32 // minimum limit that could be divided by all resolutions
@@ -57,7 +57,7 @@ namespace librealsense
 
         friend class pointcloud;
 
-        void monotonic_heuristic_invalidation(float3* points, float2* uv_map, const std::vector<float2> & pix_coord, const rs2::depth_frame& depth) const;;
+        void monotonic_heuristic_invalidation(float3* points, float2* uv_map, const std::vector<float2> & pix_coord, const rs2::depth_frame& depth) const;
         void comprehensive_invalidation(float3* points, float2* uv_map, const std::vector<float2> & pix_coord) const;
 
         optional_value<rs2_intrinsics>              _depth_intrinsics;

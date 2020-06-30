@@ -4,7 +4,7 @@
 #pragma once
 
 #include "RsDevice.hh"
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 
 #include <map>
 

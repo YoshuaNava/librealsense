@@ -39,7 +39,7 @@ else()
   include_directories(${PROJECT_NAME}
     ../../common
     ../../src/ipDeviceCommon
-    ../../include/librealsense2
+    ../../include/any_librealsense2
     ../../third-party/tclap/include
     ../../third-party/easyloggingpp/src
     ${LIVE}/groupsock/include 

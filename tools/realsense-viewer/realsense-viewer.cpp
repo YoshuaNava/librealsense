@@ -2,9 +2,9 @@
 // Copyright(c) 2017 Intel Corporation. All Rights Reserved.
 
 
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 #ifdef NETWORK_DEVICE
-#include <librealsense2-net/rs_net.hpp>
+#include <any_librealsense2-net/rs_net.hpp>
 #endif
 #include "viewer.h"
 #include "os.h"

@@ -6,8 +6,8 @@
 #include <vector>
 #include "error.h"
 
-#include "../../../include/librealsense2/rs.h"
-#include "../../../include/librealsense2/hpp/rs_device.hpp"
+#include "../../../include/any_librealsense2/rs.h"
+#include "../../../include/any_librealsense2/hpp/rs_device.hpp"
 #include "../../api.h"
 
 extern "C" JNIEXPORT jboolean JNICALL

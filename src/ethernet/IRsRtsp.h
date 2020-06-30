@@ -7,7 +7,7 @@
 #include "rtp_callback.hh"
 #include <ipDeviceCommon/RsCommon.h>
 
-#include <librealsense2/hpp/rs_internal.hpp>
+#include <any_librealsense2/hpp/rs_internal.hpp>
 
 #include <vector>
 

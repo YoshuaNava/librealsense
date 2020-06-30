@@ -33,8 +33,8 @@ add_definitions(-DELPP_NO_DEFAULT_LOG_FILE)
 add_library(${PROJECT_NAME} ${REALSENSE_NET_CPP})
 
 set(REALSENSE_NET_PUBLIC_HEADERS
-    ../../include/librealsense2-net/rs_net.h
-    ../../include/librealsense2-net/rs_net.hpp
+    ../../include/any_librealsense2-net/rs_net.h
+    ../../include/any_librealsense2-net/rs_net.hpp
 )
 
 set(CMAKECONFIG_NET_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
@@ -104,7 +104,7 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_PREFIX}/include/librealsense2-net"
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_PREFIX}/include/any_librealsense2-net"
 )
 
 install(EXPORT realsense2-netTargets

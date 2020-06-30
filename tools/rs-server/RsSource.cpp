@@ -9,7 +9,7 @@
 #include <compression/CompressionFactory.h>
 #include <ipDeviceCommon/RsCommon.h>
 #include <ipDeviceCommon/Statistic.h>
-#include <librealsense2/h/rs_sensor.h>
+#include <any_librealsense2/h/rs_sensor.h>
 
 RsDeviceSource* RsDeviceSource::createNew(UsageEnvironment& t_env, rs2::video_stream_profile& t_videoStreamProfile, rs2::frame_queue& t_queue)
 {

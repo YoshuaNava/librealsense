@@ -14,8 +14,8 @@ set(REALSENSE_GL_CPP
     pointcloud-gl.cpp
     rs-gl.cpp
     realsense-gl.def
-    ../../include/librealsense2-gl/rs_processing_gl.h
-    ../../include/librealsense2-gl/rs_processing_gl.hpp
+    ../../include/any_librealsense2-gl/rs_processing_gl.h
+    ../../include/any_librealsense2-gl/rs_processing_gl.hpp
     ../../third-party/glad/glad.c
     ../../common/opengl3.cpp
     ../../common/opengl3.h
@@ -34,8 +34,8 @@ set(REALSENSE_GL_CPP
 )
 
 set(REALSENSE_GL_PUBLIC_HEADERS
-    ../../include/librealsense2-gl/rs_processing_gl.h
-    ../../include/librealsense2-gl/rs_processing_gl.hpp
+    ../../include/any_librealsense2-gl/rs_processing_gl.h
+    ../../include/any_librealsense2-gl/rs_processing_gl.hpp
 )
 
 set(CMAKECONFIG_GL_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${LRS_GL_TARGET}")
@@ -50,8 +50,8 @@ source_group("3rd Party" FILES
     ../../third-party/glad/glad.c)
 
 source_group("API" FILES
-    ../../include/librealsense2-gl/rs_processing_gl.h
-    ../../include/librealsense2-gl/rs_processing_gl.hpp
+    ../../include/any_librealsense2-gl/rs_processing_gl.h
+    ../../include/any_librealsense2-gl/rs_processing_gl.hpp
     realsense-gl.def)
 
 add_library(${LRS_GL_TARGET} ${REALSENSE_GL_CPP})
@@ -98,7 +98,7 @@ install(TARGETS ${LRS_GL_TARGET}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_PREFIX}/include/librealsense2-gl"
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_PREFIX}/include/any_librealsense2-gl"
 )
 
 install(EXPORT realsense2-glTargets

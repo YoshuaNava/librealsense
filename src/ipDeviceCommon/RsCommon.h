@@ -4,7 +4,7 @@
 #pragma once
 
 #include "string.h"
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 
 #pragma pack(push, 1)
 

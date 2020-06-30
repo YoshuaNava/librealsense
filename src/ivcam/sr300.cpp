@@ -11,7 +11,7 @@
 #include "proc/hole-filling-filter.h"
 #include "proc/depth-formats-converter.h"
 #include "ds5/ds5-device.h"
-#include "../../include/librealsense2/h/rs_sensor.h"
+#include "../../include/any_librealsense2/h/rs_sensor.h"
 #include "../common/fw/firmware-version.h"
 
 namespace librealsense

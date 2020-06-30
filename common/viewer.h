@@ -9,7 +9,7 @@
 #include "skybox.h"
 #include "measurement.h"
 #include "updates-model.h"
-#include <librealsense2/hpp/rs_export.hpp>
+#include <any_librealsense2/hpp/rs_export.hpp>
 
 namespace rs2
 {

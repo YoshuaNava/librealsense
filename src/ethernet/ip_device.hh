@@ -9,8 +9,8 @@
 
 #include "option.h"
 #include "software-device.h"
-#include <librealsense2/hpp/rs_internal.hpp>
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/hpp/rs_internal.hpp>
+#include <any_librealsense2/rs.hpp>
 
 #include <list>
 

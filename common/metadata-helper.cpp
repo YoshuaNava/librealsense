@@ -15,7 +15,7 @@
 #include <map>
 #include <memory>
 
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383

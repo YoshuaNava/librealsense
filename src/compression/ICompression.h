@@ -5,7 +5,7 @@
 
 #include <NetdevLog.h>
 
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/rs.hpp>
 
 class ICompression
 {

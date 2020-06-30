@@ -6,8 +6,8 @@
 #include "compression/ICompression.h"
 #include <chrono>
 #include <ipDeviceCommon/MemoryPool.h>
-#include <librealsense2/hpp/rs_types.hpp>
-#include <librealsense2/rs.hpp>
+#include <any_librealsense2/hpp/rs_types.hpp>
+#include <any_librealsense2/rs.hpp>
 #include <unordered_map>
 
 typedef struct RsOption

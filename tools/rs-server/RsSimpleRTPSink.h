@@ -5,7 +5,7 @@
 
 #include "RsDevice.hh"
 #include "liveMedia.hh"
-#include <librealsense2/hpp/rs_internal.hpp>
+#include <any_librealsense2/hpp/rs_internal.hpp>
 
 class RsSimpleRTPSink : public SimpleRTPSink
 {
